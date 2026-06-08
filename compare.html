@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>With vs. Without HUF: Direct Comparison & Scenarios</title>
+    <meta name="description" content="Detailed side-by-side comparison of family investing and tax saving With HUF vs. Without HUF, featuring interactive income-tier scenarios.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Reading Progress Bar -->
+    <div id="progress-bar" class="progress-bar"></div>
+
+    <!-- Layout Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="main-sidebar">
+            <div class="sidebar-header">
+                <span class="report-tag">HUF Setup Manual</span>
+                <h2 class="sidebar-title">Comparison Matrix</h2>
+            </div>
+            <div class="sidebar-pages">
+                <a href="index.html" class="page-tab">📊 Financial Report</a>
+                <a href="compare.html" class="page-tab active">⚖️ HUF Comparison</a>
+                <a href="apply.html" class="page-tab">📝 Setup Guide</a>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#welcome" class="nav-link active" id="link-welcome">Welcome</a></li>
+                    <li><a href="#matrix" class="nav-link" id="link-matrix">Comparison Matrix</a></li>
+                    <li><a href="#scenarios" class="nav-link" id="link-scenarios">Income Scenarios</a></li>
+                    <li><a href="#decision" class="nav-link" id="link-decision">Decision Guide</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-outline btn-print" id="btn-print-report">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Print Report / Save PDF
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Welcome Section -->
+            <section id="welcome" class="report-section card-style">
+                <div class="section-badge">⚖️ WITH VS. WITHOUT HUF</div>
+                <h2 class="section-title">Should You Invest With or Without an HUF?</h2>
+                <p class="lead-text">
+                    Deciding whether to use an HUF comes down to comparing the tax savings against the family rules.
+                </p>
+                <p>
+                    Investing solely in your own name (<strong>Without HUF</strong>) gives you absolute personal control over your money, but forces you into higher tax brackets as your income grows.
+                </p>
+                <p>
+                    Setting up a family account (<strong>With HUF</strong>) lets you create a separate legal bucket that enjoys its own tax exemptions and slabs, but means your family members have joint legal ownership. 
+                </p>
+                <p>
+                    Below is a direct side-by-side comparison of the financial benefits and the operational differences.
+                </p>
+            </section>
+
+            <!-- COMPARISON MATRIX -->
+            <section id="matrix" class="report-section card-style">
+                <div class="section-badge">THE COMPARISON MATRIX</div>
+                <h2 class="section-title">Side-by-Side Financial & Legal Breakdown</h2>
+                <p class="section-desc">
+                    Let's compare the key rules for investing in your personal name vs. investing under a family HUF.
+                </p>
+                
+                <div class="comparison-grid" style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Row 1: Tax Slabs -->
+                    <div class="comparison-card" style="border-left: 4px solid var(--color-primary);">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 8px;">
+                            <span>💰 Basic Tax Exemption (New Regime)</span>
+                            <span class="badge-accent">Tax Slabs</span>
+                        </h3>
+                        <div class="grid-2-col" style="align-items: stretch; gap: 20px;">
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                <strong style="color: var(--color-primary); display:block; margin-bottom: 6px;">Without HUF (Personal Name)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    You get one basic tax-free limit of <strong>₹4 Lakhs</strong>. All income above this is taxed at normal slabs up to 30%.
+                                </p>
+                            </div>
+                            <div style="background: var(--color-accent-gold-light); padding: 15px; border-radius: 8px; border: 1px solid rgba(180, 138, 62, 0.15);">
+                                <strong style="color: var(--color-accent-gold-dark); display:block; margin-bottom: 6px;">With HUF (Family Entity)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    Your family gets <strong>two separate limits</strong>. You get ₹4L tax-free, and the HUF gets another <strong>₹4L tax-free</strong>. That's ₹8 Lakhs tax-free in total!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Capital Gains -->
+                    <div class="comparison-card" style="border-left: 4px solid var(--color-primary);">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 8px;">
+                            <span>📈 Stock Market Capital Gains (LTCG)</span>
+                            <span class="badge-accent">Investing</span>
+                        </h3>
+                        <div class="grid-2-col" style="align-items: stretch; gap: 20px;">
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                <strong style="color: var(--color-primary); display:block; margin-bottom: 6px;">Without HUF (Personal Name)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    You get one annual tax-free Long-Term Capital Gains (LTCG) limit of <strong>₹1.25 Lakhs</strong>. Any gains above this are taxed at 12.5%.
+                                </p>
+                            </div>
+                            <div style="background: var(--color-accent-gold-light); padding: 15px; border-radius: 8px; border: 1px solid rgba(180, 138, 62, 0.15);">
+                                <strong style="color: var(--color-accent-gold-dark); display:block; margin-bottom: 6px;">With HUF (Family Entity)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    You double your limits. Your HUF gets its own <strong>separate ₹1.25 Lakhs tax-free LTCG limit</strong>, allowing you to split portfolios and save tax on sales.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Control -->
+                    <div class="comparison-card" style="border-left: 4px solid var(--color-primary);">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 8px;">
+                            <span>👑 Ownership & Control of Funds</span>
+                            <span class="badge-accent">Governance</span>
+                        </h3>
+                        <div class="grid-2-col" style="align-items: stretch; gap: 20px;">
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                <strong style="color: var(--color-primary); display:block; margin-bottom: 6px;">Without HUF (Personal Name)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    Absolute control. The money is yours. You can spend it, gift it, or invest it however you like without anyone's permission.
+                                </p>
+                            </div>
+                            <div style="background: var(--color-accent-gold-light); padding: 15px; border-radius: 8px; border: 1px solid rgba(180, 138, 62, 0.15);">
+                                <strong style="color: var(--color-accent-gold-dark); display:block; margin-bottom: 6px;">With HUF (Family Entity)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    Joint ownership. The Karta manages the accounts, but children have equal rights by birth. The money belongs to the family pool.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Succession -->
+                    <div class="comparison-card" style="border-left: 4px solid var(--color-primary);">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 8px;">
+                            <span>📝 Succession & Inheritance</span>
+                            <span class="badge-accent">Succession</span>
+                        </h3>
+                        <div class="grid-2-col" style="align-items: stretch; gap: 20px;">
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                <strong style="color: var(--color-primary); display:block; margin-bottom: 6px;">Without HUF (Personal Name)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    Upon passing, assets require a Will, nominee claims, or legal certificates. Bank/Demat accounts can be frozen during process.
+                                </p>
+                            </div>
+                            <div style="background: var(--color-accent-gold-light); padding: 15px; border-radius: 8px; border: 1px solid rgba(180, 138, 62, 0.15);">
+                                <strong style="color: var(--color-accent-gold-dark); display:block; margin-bottom: 6px;">With HUF (Family Entity)</strong>
+                                <p style="font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-muted);">
+                                    Automatic. If Karta passes away, the eldest remaining coparcener automatically becomes Karta. Accounts are not frozen.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INCOME SCENARIOS -->
+            <section id="scenarios" class="report-section card-style">
+                <div class="section-badge">REAL-WORLD TIER COMPARISON</div>
+                <h2 class="section-title">Income-Based Tax Savings Scenarios</h2>
+                <p class="section-desc">
+                    Click on the family income levels below to see how splitting income between an Individual and an HUF reduces the tax bill under the New Tax Regime (FY 2026-27 Slabs).
+                </p>
+
+                <!-- Interactive Scenario Buttons -->
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+                    <button class="btn btn-scenario active" data-income="1500000" id="btn-scen-15" style="width: auto; background-color: var(--color-primary); color: white;">₹15 Lakhs Income</button>
+                    <button class="btn btn-scenario" data-income="3000000" id="btn-scen-30" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹30 Lakhs Income</button>
+                    <button class="btn btn-scenario" data-income="5000000" id="btn-scen-50" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹50 Lakhs Income</button>
+                    <button class="btn btn-scenario" data-income="10000000" id="btn-scen-100" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹1 Crore Income</button>
+                    <button class="btn btn-scenario" data-income="custom" id="btn-scen-custom" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">Custom Income...</button>
+                </div>
+
+                <!-- Custom Income Input Row (hidden by default) -->
+                <div id="custom-income-input-container" style="display: none; justify-content: center; margin-bottom: 24px;">
+                    <div class="form-group" style="max-width: 320px; width: 100%;">
+                        <label for="custom-scen-income" style="font-weight:600; font-size:0.9rem; margin-bottom: 6px; text-align: center; display: block;">Enter Family Income (₹):</label>
+                        <div class="input-wrapper">
+                            <span class="currency-prefix">₹</span>
+                            <input type="number" id="custom-scen-income" value="2000000" min="100000" max="100000000" step="50000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario Details Panel -->
+                <div style="background-color: #ffffff; border-radius: 12px; border: 1px solid rgba(226, 232, 240, 1); padding: 30px; box-shadow: var(--shadow-soft);">
+                    <h3 style="font-size: 1.25rem; color: var(--color-primary); margin-bottom: 20px; text-align: center;">
+                        Financial Breakdown for Family Income of <span id="scen-income-lbl" class="text-gold">₹15,00,000</span>
+                    </h3>
+                    
+                    <div class="grid-2-col" style="align-items: stretch;">
+                        <!-- Left Side: Table of split and taxes -->
+                        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                            <div class="table-responsive" style="margin-bottom: 20px;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Scenario Detail</th>
+                                            <th>Without HUF</th>
+                                            <th>With HUF (Split)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Your Income</strong></td>
+                                            <td><span id="scen-ind-inc-no">₹1,500,000</span></td>
+                                            <td><span id="scen-ind-inc-yes">₹1,000,000</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>HUF Income</strong></td>
+                                            <td>₹0</td>
+                                            <td><span id="scen-huf-inc">₹500,000</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Your Personal Tax</strong></td>
+                                            <td><span id="scen-ind-tax-no">₹1,04,000</span></td>
+                                            <td><span id="scen-ind-tax-yes">₹0</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>HUF's Separate Tax</strong></td>
+                                            <td>₹0</td>
+                                            <td><span id="scen-huf-tax">₹5,200</span></td>
+                                        </tr>
+                                        <tr style="background-color: var(--color-accent-gold-light); font-weight:700;">
+                                            <td>Total Family Tax</td>
+                                            <td><span id="scen-tot-tax-no">₹1,04,000</span></td>
+                                            <td><span id="scen-tot-tax-yes">₹5,200</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Savings highlight & compounding -->
+                        <div style="display: flex; flex-direction: column; justify-content: space-between; background: #f8fafc; border-radius: 8px; padding: 24px; border: var(--border-glass);">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-success); letter-spacing: 1px; display: block; margin-bottom: 4px;">ANNUAL MONEY SAVED</span>
+                                <span id="scen-saved-val" style="font-size: 2.25rem; font-weight: 800; color: var(--color-success); display:block;">₹98,800</span>
+                                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 6px; margin-bottom:0;">Saved from direct income split</p>
+                            </div>
+                            <div class="divider"></div>
+                            <div>
+                                <h4 style="font-size: 0.95rem; color: var(--color-primary); margin-bottom: 12px; font-weight:700;">Reinvested Compounded Growth (12% CAGR):</h4>
+                                <div style="display: flex; gap: 10px;">
+                                    <div style="flex:1; background: white; padding: 12px; border-radius: 6px; text-align:center; border: 1px solid rgba(226, 232, 240, 1);">
+                                        <span id="scen-grow-10" style="font-size: 1.15rem; font-weight:700; color: var(--color-primary); display:block;">₹17.3 L</span>
+                                        <span style="font-size: 0.7rem; color: var(--color-text-muted);">In 10 Years</span>
+                                    </div>
+                                    <div style="flex:1; background: white; padding: 12px; border-radius: 6px; text-align:center; border: 1px solid rgba(226, 232, 240, 1);">
+                                        <span id="scen-grow-30" style="font-size: 1.15rem; font-weight:700; color: var(--color-primary); display:block;">₹2.38 Cr</span>
+                                        <span style="font-size: 0.7rem; color: var(--color-text-muted);">In 30 Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Calculation Steps (Dynamic) -->
+                    <div class="calculation-steps-container" style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; border: var(--border-glass);">
+                        <h4 style="font-size: 1rem; color: var(--color-primary); margin-bottom: 16px; border-bottom: 2px solid var(--color-accent-gold-light); padding-bottom: 6px; font-weight:700;">
+                            🔎 Step-by-Step Tax Calculation Details
+                        </h4>
+                        <div class="grid-2-col" style="align-items: start; gap: 30px;">
+                            <!-- Without HUF Steps -->
+                            <div style="background-color: white; padding: 16px; border-radius: 6px; border: 1px solid rgba(226, 232, 240, 1);">
+                                <h5 style="color: var(--color-primary); margin-bottom: 12px; font-size: 0.9rem; font-weight: 700;">Scenario A: Without HUF (100% Individual)</h5>
+                                <div id="scen-no-huf-calc-steps" style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-muted);">
+                                    <!-- Dynamic JS content -->
+                                </div>
+                            </div>
+                            
+                            <!-- With HUF Steps -->
+                            <div style="background-color: white; padding: 16px; border-radius: 6px; border: 1px solid rgba(226, 232, 240, 1);">
+                                <h5 style="color: var(--color-accent-gold-dark); margin-bottom: 12px; font-size: 0.9rem; font-weight: 700;">Scenario B: With HUF (Optimized Split)</h5>
+                                
+                                <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px solid hsl(210, 20%, 96%);">
+                                    <h6 style="font-weight:700; color: var(--color-primary); font-size:0.82rem; margin-bottom: 8px;">1. Individual Portion Tax</h6>
+                                    <div id="scen-with-huf-ind-steps" style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-muted);">
+                                        <!-- Dynamic JS content -->
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h6 style="font-weight:700; color: var(--color-accent-gold-dark); font-size:0.82rem; margin-bottom: 8px;">2. HUF Portion Tax</h6>
+                                    <div id="scen-with-huf-huf-steps" style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-muted);">
+                                        <!-- Dynamic JS content -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DECISION GUIDE -->
+            <section id="decision" class="report-section card-style">
+                <div class="section-badge">DECISION GUIDE</div>
+                <h2 class="section-title">Is an HUF Right for Your Family?</h2>
+                <p class="section-desc">
+                    An HUF is an amazing structure, but it is not necessary for everyone. Use this decision matrix to help you decide.
+                </p>
+                
+                <div class="grid-2-col">
+                    <div style="background-color: #f0fdf4; border: 1px dashed var(--color-success); border-radius: 12px; padding: 30px;">
+                        <h3 style="color: var(--color-success); font-size:1.2rem; margin-bottom: 16px; display:flex; align-items:center; gap: 8px;">
+                            <span>✓</span> Yes, You Should Create an HUF if:
+                        </h3>
+                        <ul class="styled-list" style="margin-bottom:0;">
+                            <li style="font-size:0.9rem;">You have <strong>non-salary income</strong> (e.g. rent from a house, interest from FDs, or stock dividends) that pushes your tax bracket above 20%.</li>
+                            <li style="font-size:0.9rem;">You are a <strong>stock trader or active investor</strong> and want to save taxes on capital gains by utilizing a separate tax exemption.</li>
+                            <li style="font-size:0.9rem;">You own <strong>ancestral property</strong> or expect to receive an inheritance, and want to keep it unified for the family.</li>
+                            <li style="font-size:0.9rem;">You want to build a long-term <strong>financial asset pool</strong> that passes down to your kids automatically.</li>
+                        </ul>
+                    </div>
+
+                    <div style="background-color: #fff1f2; border: 1px dashed #f43f5e; border-radius: 12px; padding: 30px;">
+                        <h3 style="color: #f43f5e; font-size:1.2rem; margin-bottom: 16px; display:flex; align-items:center; gap: 8px;">
+                            <span>✗</span> No, You Should Avoid an HUF if:
+                        </h3>
+                        <ul class="styled-list cross-list" style="margin-bottom:0;">
+                            <li style="font-size:0.9rem; position:relative;">Your <strong>only income is salary</strong> (salary must be taxed under your name; it cannot be transferred to the HUF).</li>
+                            <li style="font-size:0.9rem; position:relative;">You have <strong>only one child</strong> or a single nuclear family with very low overall taxable income (&lt; ₹12 Lakhs).</li>
+                            <li style="font-size:0.9rem; position:relative;">You anticipate <strong>family disputes</strong> or divorce. Separating HUF assets during a partition is legally complicated.</li>
+                            <li style="font-size:0.9rem; position:relative;">You do not want to maintain separate books of accounts, write deeds, or file <strong>two separate tax returns</strong> every year.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; text-align: center;">
+                    <a href="apply.html" class="btn" style="background-color: var(--color-accent-gold-dark); color: white; display: inline-flex; width: auto; font-weight:700;">
+                        Ready to Start? Read the Step-by-Step Setup Guide →
+                    </a>
+                </div>
+            </section>
+            
+        </main>
+    </div>
+
+    <!-- JS Logic -->
+    <script src="script.js"></script>
+</body>
+</html>
