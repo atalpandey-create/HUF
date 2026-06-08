@@ -3,28 +3,43 @@ import {
   formatCurrency,
   formatSimpleBrief,
   getDetailedTaxBreakdown,
-  getOptimalSplit
+  getOptimalSplit,
+  calculateNewRegimeTax
 } from '../utils/taxCalculator';
 
 export default function ComparisonPage() {
   // --- Gift Tax Calculator State ---
-  const [giftAssetType, setGiftAssetType] = useState('cash');
-  const [giftAmount, setGiftAmount] = useState(100000);
-  const [giftScenario, setGiftScenario] = useState('member-to-huf');
+  const [giftAmtMemberToHuf, setGiftAmtMemberToHuf] = useState(100000);
+  const [giftAssetMemberToHuf, setGiftAssetMemberToHuf] = useState('cash');
 
-  // --- Real-world Income Scenario State ---
-  const [activeScenBtn, setActiveScenBtn] = useState('12L'); // '12L' | '50L' | '2Cr' | 'custom'
-  
-  // Sourced income breakdown
+  const [giftAmtNonMemberToHuf, setGiftAmtNonMemberToHuf] = useState(50000);
+  const [giftAssetNonMemberToHuf, setGiftAssetNonMemberToHuf] = useState('cash');
+
+  const [giftAmtKartaCoparcenerToHuf, setGiftAmtKartaCoparcenerToHuf] = useState(100000);
+  const [giftAssetKartaCoparcenerToHuf, setGiftAssetKartaCoparcenerToHuf] = useState('cash');
+
+  const [giftAmtHufToKartaCoparcener, setGiftAmtHufToKartaCoparcener] = useState(100000);
+  const [giftAssetHufToKartaCoparcener, setGiftAssetHufToKartaCoparcener] = useState('cash');
+
+  const [giftAmtHufToSpouse, setGiftAmtHufToSpouse] = useState(100000);
+  const [giftAssetHufToSpouse, setGiftAssetHufToSpouse] = useState('cash');
+
+  const [expandedScenario, setExpandedScenario] = useState('karta-coparcener-to-huf');
+
+  // --- Real-world Income State ---
+  const [activeScenBtn, setActiveScenBtn] = useState('12L');
   const [incomeSalary, setIncomeSalary] = useState(700000);
   const [incomeRent, setIncomeRent] = useState(200000);
   const [incomeInterest, setIncomeInterest] = useState(150000);
+  const [incomeDividend, setIncomeDividend] = useState(0);
   const [incomeCapitalGains, setIncomeCapitalGains] = useState(150000);
   const [incomeBusiness, setIncomeBusiness] = useState(0);
-  const [divertPct, setDivertPct] = useState(0); // Starts at 0% for 12L preset optimal
+  const [incomeGift, setIncomeGift] = useState(0);
+  const [divertPct, setDivertPct] = useState(0);
 
-  // --- Gift Tax Calculator Calculations ---
-  const giftResult = useMemo(() => {
+
+  // --- Gift Tax Calculator Calculations Helper ---
+  const getGiftCalculation = (amount, assetType, scenario) => {
     let taxableAmt = 0;
     let taxRateText = 'Exempt (0%)';
     let taxRateColor = 'var(--color-success)';
@@ -33,86 +48,90 @@ export default function ComparisonPage() {
     let clauseDesc = '';
     let strategyTip = '';
 
-    if (giftScenario === 'member-to-huf') {
+    if (scenario === 'member-to-huf' || scenario === 'karta-coparcener-to-huf') {
       taxableAmt = 0;
       taxRateText = 'Exempt (0%)';
       taxRateColor = 'var(--color-success)';
       clubbingStatusText = 'Yes, under Sec 64(2)';
       clubbingStatusColor = '#f43f5e';
 
-      if (giftAssetType === 'cash') {
+      if (assetType === 'cash') {
         clauseDesc = 'Gifts of cash received by an HUF from its <strong>members</strong> are completely tax-exempt under Section 56(2)(x). However, any income generated directly from these funds (e.g. FD interest) is <strong>clubbed with the gifting member\'s personal income</strong>.';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Reinvest the first-year interest in non-clubbing assets (like equity index mutual funds or listed shares) to build wealth in the HUF and utilize its separate ₹1.25 Lakhs tax-free LTCG limit.';
-      } else if (giftAssetType === 'immovable') {
+      } else if (assetType === 'immovable') {
         clauseDesc = 'Gifting immovable property (house, land) from a member to the HUF is tax-exempt at receipt. However, any <strong>rental income</strong> or future capital gains from this property will be <strong>clubbed with the gifting member\'s personal income</strong> (Section 27 deemed ownership).';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Instead of a direct gift, consider selling the property to the HUF using an interest-bearing loan from the member, keeping rental income in the HUF\'s slabs.';
       } else {
         clauseDesc = 'Gifting movable assets (shares, mutual funds, gold) by a member to the HUF is tax-free when received. However, subsequent dividends or capital gains upon sale of these assets are <strong>clubbed with the gifting member\'s income</strong>.';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> If the HUF sells the gifted shares/gold, the capital gains are clubbed. Reinvesting that gain into new assets keeps the subsequent second-degree income in the HUF.';
       }
-    } else if (giftScenario === 'nonmember-to-huf') {
+    } else if (scenario === 'nonmember-to-huf') {
       const limit = 50000;
-      if (giftAmount <= limit) {
+      if (amount <= limit) {
         taxableAmt = 0;
         taxRateText = 'Exempt (0%)';
         taxRateColor = 'var(--color-success)';
         clubbingStatusText = 'No';
         clubbingStatusColor = 'var(--color-success)';
 
-        if (giftAssetType === 'cash') {
+        if (assetType === 'cash') {
           clauseDesc = 'Cash gifts from non-members are completely tax-exempt under Section 56(2)(x) as long as the total value of all such gifts does not exceed <strong>₹50,000</strong> in a single financial year.';
-        } else if (giftAssetType === 'immovable') {
+        } else if (assetType === 'immovable') {
           clauseDesc = 'Immovable property gifted by a non-member is tax-free if the total Stamp Duty Value is up to <strong>₹50,000</strong>.';
         } else {
           clauseDesc = 'Movable assets (shares, mutual funds, gold) gifted by a non-member are tax-free if the total Fair Market Value (FMV) is up to <strong>₹50,000</strong>.';
         }
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Ensure that aggregate annual gifts from friends, business clients, or non-members to the HUF remain strictly under ₹50,000 to keep it tax-free.';
       } else {
-        taxableAmt = giftAmount;
+        taxableAmt = amount;
         taxRateText = 'Taxed at HUF Slabs';
         taxRateColor = '#f43f5e';
         clubbingStatusText = 'No';
         clubbingStatusColor = 'var(--color-success)';
 
-        if (giftAssetType === 'cash') {
-          clauseDesc = `Since aggregate cash gifts from non-members exceed ₹50,000, the <strong>entire amount (${formatCurrency(giftAmount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+        const exemptNote = amount <= 400000 
+          ? `<br/><span style="display:block; font-size:0.75rem; color:var(--color-text-muted); margin-top:6px;"><em>Note: The standalone tax is ₹0 because ${formatCurrency(amount)} falls below the HUF's basic slab exemption limit of ₹4 Lakhs. If the HUF has other taxable incomes, this gift will be taxed on top of them at the HUF's slab rates.</em></span>`
+          : '';
+
+        if (assetType === 'cash') {
+          clauseDesc = `Since aggregate cash gifts from non-members exceed ₹50,000, the <strong>entire amount (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".${exemptNote}`;
           strategyTip = '⚠️ <strong>Warning:</strong> The entire amount is taxed, not just the excess. Consider structuring this as an interest-bearing loan instead of a gift.';
-        } else if (giftAssetType === 'immovable') {
-          clauseDesc = `Since the stamp duty value exceeds ₹50,000, the <strong>entire Stamp Duty Value (${formatCurrency(giftAmount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+        } else if (assetType === 'immovable') {
+          clauseDesc = `Since the stamp duty value exceeds ₹50,000, the <strong>entire Stamp Duty Value (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".${exemptNote}`;
           strategyTip = '⚠️ <strong>Warning:</strong> Gifting property from a non-member is highly tax-inefficient. Consider structuring this as a commercial sale to the HUF instead.';
         } else {
-          clauseDesc = `Since the Fair Market Value (FMV) exceeds ₹50,000, the <strong>entire FMV (${formatCurrency(giftAmount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+          clauseDesc = `Since the Fair Market Value (FMV) exceeds ₹50,000, the <strong>entire FMV (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".${exemptNote}`;
           strategyTip = '⚠️ <strong>Warning:</strong> High value movable gifts from non-members are taxed in full. Consider a loan or a direct purchase by the HUF.';
         }
       }
-    } else if (giftScenario === 'huf-to-coparcener') {
+    } else if (scenario === 'huf-to-coparcener') {
       taxableAmt = 0;
       taxRateText = 'Exempt (0%)';
       taxRateColor = 'var(--color-success)';
       clubbingStatusText = 'No';
       clubbingStatusColor = 'var(--color-success)';
 
-      if (giftAssetType === 'cash') {
+      if (assetType === 'cash') {
         clauseDesc = 'Gifts of cash from the HUF to its Karta or Coparceners (children) are tax-exempt under Section 10(2) and Section 56(2)(x), as they have a pre-existing birthright in the family pool. No clubbing applies.';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Use HUF funds to pay for coparceners\' education, medical treatments, or marriage expenses. These are fully exempt, legally clean, and face zero tax risk.';
-      } else if (giftAssetType === 'immovable') {
+      } else if (assetType === 'immovable') {
         clauseDesc = 'Transferring immovable property (house, land) from the HUF to a coparcener is tax-exempt under Section 10(2). A registered gift deed or partition deed is recommended to formalize the clean transfer.';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Transferring HUF property to a coparcener is best done during a complete partition of the HUF to prevent future title disputes.';
       } else {
         clauseDesc = 'Gifting movable assets (shares, gold) from the HUF to a coparcener is tax-free. No clubbing applies.';
         strategyTip = '💡 <strong>Tax Planning Tip:</strong> Excellent for distributing gold to daughters for marriage or providing capital to children for their independent startup or investments.';
       }
-    } else if (giftScenario === 'huf-to-spouse') {
+    } else if (scenario === 'huf-to-spouse') {
       taxableAmt = 0;
       taxRateText = 'Exempt (0%)*';
       taxRateColor = 'var(--color-accent-gold-dark)';
       clubbingStatusText = 'No*';
       clubbingStatusColor = 'var(--color-accent-gold-dark)';
 
-      if (giftAssetType === 'cash') {
+      if (assetType === 'cash') {
         clauseDesc = 'Gifts from the HUF to the Karta\'s spouse (non-coparcener member) are technically tax-free under Section 10(2). However, there is a <strong>high litigation risk</strong>, as the IT Department often argues that HUFs are not in the "relative" list for individual recipients under Section 56(2)(x) (e.g. *Gyanchand Bardia case*).';
         strategyTip = '⚠️ <strong>Warning:</strong> Refrain from direct high-value cash gifts to a spouse from the HUF to avoid scrutiny. Safer alternatives include payouts for medical expenses or maintenance support.';
-      } else if (giftAssetType === 'immovable') {
+      } else if (assetType === 'immovable') {
         clauseDesc = 'Gifting immovable property to Karta\'s spouse is tax-free but carries high audit risks. Any rental income generated from such property might be clubbed with the Karta\'s personal income if originally funded by the Karta (Section 64).';
         strategyTip = '⚠️ <strong>Warning:</strong> Gifting HUF real estate to a spouse can lead to deemed ownership and clubbing disputes. Consider a commercial lease or formal sale instead.';
       } else {
@@ -121,6 +140,17 @@ export default function ComparisonPage() {
       }
     }
 
+    const giftTaxPayable = calculateNewRegimeTax(taxableAmt, false);
+    const giftEffectiveRate = taxableAmt > 0 ? ((giftTaxPayable / taxableAmt) * 100) : 0;
+    
+    let maxSlabRate = 0;
+    if (taxableAmt > 2400000) maxSlabRate = 30;
+    else if (taxableAmt > 2000000) maxSlabRate = 25;
+    else if (taxableAmt > 1600000) maxSlabRate = 20;
+    else if (taxableAmt > 1200000) maxSlabRate = 15;
+    else if (taxableAmt > 800000) maxSlabRate = 10;
+    else if (taxableAmt > 400000) maxSlabRate = 5;
+
     return {
       taxableAmt,
       taxRateText,
@@ -128,22 +158,61 @@ export default function ComparisonPage() {
       clubbingStatusText,
       clubbingStatusColor,
       clauseDesc,
-      strategyTip
+      strategyTip,
+      giftTaxPayable,
+      giftEffectiveRate,
+      maxSlabRate
     };
-  }, [giftAssetType, giftAmount, giftScenario]);
+  };
+
+  // --- Gift Tax Summary Calculator ---
+  const giftSummary = useMemo(() => {
+    const resMember = getGiftCalculation(giftAmtMemberToHuf, giftAssetMemberToHuf, 'member-to-huf');
+    const resNonMember = getGiftCalculation(giftAmtNonMemberToHuf, giftAssetNonMemberToHuf, 'nonmember-to-huf');
+    const resKarta = getGiftCalculation(giftAmtKartaCoparcenerToHuf, giftAssetKartaCoparcenerToHuf, 'karta-coparcener-to-huf');
+    const resHufToKarta = getGiftCalculation(giftAmtHufToKartaCoparcener, giftAssetHufToKartaCoparcener, 'huf-to-coparcener');
+    const resHufToSpouse = getGiftCalculation(giftAmtHufToSpouse, giftAssetHufToSpouse, 'huf-to-spouse');
+
+    const totalReceived = giftAmtKartaCoparcenerToHuf + giftAmtMemberToHuf + giftAmtNonMemberToHuf;
+    const totalDistributed = giftAmtHufToKartaCoparcener + giftAmtHufToSpouse;
+    const totalTaxable = resMember.taxableAmt + resNonMember.taxableAmt + resKarta.taxableAmt + resHufToKarta.taxableAmt + resHufToSpouse.taxableAmt;
+    const totalTax = resMember.giftTaxPayable + resNonMember.giftTaxPayable + resKarta.giftTaxPayable + resHufToKarta.giftTaxPayable + resHufToSpouse.giftTaxPayable;
+
+    return {
+      totalReceived,
+      totalDistributed,
+      totalTaxable,
+      totalTax
+    };
+  }, [
+    giftAmtMemberToHuf, giftAssetMemberToHuf,
+    giftAmtNonMemberToHuf, giftAssetNonMemberToHuf,
+    giftAmtKartaCoparcenerToHuf, giftAssetKartaCoparcenerToHuf,
+    giftAmtHufToKartaCoparcener, giftAssetHufToKartaCoparcener,
+    giftAmtHufToSpouse, giftAssetHufToSpouse
+  ]);
 
   // --- Real-world Income Scenario Calculations ---
   const finalIncome = useMemo(() => {
-    return incomeSalary + incomeRent + incomeInterest + incomeCapitalGains + incomeBusiness;
-  }, [incomeSalary, incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness]);
+    return incomeSalary + incomeRent + incomeInterest + incomeCapitalGains + incomeBusiness + incomeGift + incomeDividend;
+  }, [incomeSalary, incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, incomeDividend]);
 
   const otherIncome = useMemo(() => {
-    return incomeRent + incomeInterest + incomeCapitalGains + incomeBusiness;
-  }, [incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness]);
+    const taxableGift = incomeGift > 50000 ? incomeGift : 0;
+    return incomeRent + incomeInterest + incomeCapitalGains + incomeBusiness + taxableGift + incomeDividend;
+  }, [incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, incomeDividend]);
 
   const optimizedSplit = useMemo(() => {
-    return getOptimalSplit(incomeSalary, otherIncome);
-  }, [incomeSalary, otherIncome]);
+    const taxableGift = incomeGift > 50000 ? incomeGift : 0;
+    return getOptimalSplit({
+      salary: incomeSalary,
+      rent: incomeRent,
+      interest: incomeInterest + taxableGift,
+      dividend: incomeDividend,
+      capitalGains: incomeCapitalGains,
+      business: incomeBusiness
+    });
+  }, [incomeSalary, incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, incomeDividend]);
 
   const displayPcts = useMemo(() => {
     const pcts = optimizedSplit.optPcts || [];
@@ -163,9 +232,43 @@ export default function ComparisonPage() {
     return { hufInc, indInc };
   }, [incomeSalary, otherIncome, divertPct]);
 
-  const taxNoHufDetails = useMemo(() => getDetailedTaxBreakdown(finalIncome, true), [finalIncome]);
-  const taxIndSplitDetails = useMemo(() => getDetailedTaxBreakdown(scenarioSplit.indInc, true), [scenarioSplit.indInc]);
-  const taxHufSplitDetails = useMemo(() => getDetailedTaxBreakdown(scenarioSplit.hufInc, false), [scenarioSplit.hufInc]);
+  const taxNoHufDetails = useMemo(() => {
+    const taxableGift = incomeGift > 50000 ? incomeGift : 0;
+    return getDetailedTaxBreakdown({
+      salary: incomeSalary,
+      rent: incomeRent,
+      interest: incomeInterest + taxableGift,
+      dividend: incomeDividend,
+      capitalGains: incomeCapitalGains,
+      business: incomeBusiness
+    }, true);
+  }, [incomeSalary, incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, incomeDividend]);
+
+  const taxIndSplitDetails = useMemo(() => {
+    const p = divertPct;
+    const taxableGift = incomeGift > 50000 ? incomeGift : 0;
+    return getDetailedTaxBreakdown({
+      salary: incomeSalary,
+      rent: incomeRent * (1 - p / 100),
+      interest: (incomeInterest + taxableGift) * (1 - p / 100),
+      dividend: incomeDividend * (1 - p / 100),
+      capitalGains: incomeCapitalGains * (1 - p / 100),
+      business: incomeBusiness * (1 - p / 100)
+    }, true);
+  }, [incomeSalary, incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, divertPct, incomeDividend]);
+
+  const taxHufSplitDetails = useMemo(() => {
+    const p = divertPct;
+    const taxableGift = incomeGift > 50000 ? incomeGift : 0;
+    return getDetailedTaxBreakdown({
+      salary: 0,
+      rent: incomeRent * (p / 100),
+      interest: (incomeInterest + taxableGift) * (p / 100),
+      dividend: incomeDividend * (p / 100),
+      capitalGains: incomeCapitalGains * (p / 100),
+      business: incomeBusiness * (p / 100)
+    }, false);
+  }, [incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness, incomeGift, divertPct, incomeDividend]);
 
   const taxNoHuf = taxNoHufDetails.totalTax;
   const taxWithHuf = taxIndSplitDetails.totalTax + taxHufSplitDetails.totalTax;
@@ -203,9 +306,17 @@ export default function ComparisonPage() {
     setIncomeInterest(intVal);
     setIncomeCapitalGains(capGains);
     setIncomeBusiness(bus);
+    setIncomeDividend(0);
+    setIncomeGift(0);
 
-    const presetOther = rent + intVal + capGains + bus;
-    const opt = getOptimalSplit(sal, presetOther);
+    const opt = getOptimalSplit({
+      salary: sal,
+      rent: rent,
+      interest: intVal,
+      dividend: 0,
+      capitalGains: capGains,
+      business: bus
+    });
     setDivertPct(opt.optPct);
   };
 
@@ -220,15 +331,56 @@ export default function ComparisonPage() {
     }
     return (
       <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--color-text-muted)' }}>
+        {/* Income & Deductions Summary */}
+        <div style={{ marginBottom: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>Gross Income:</span>
+            <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>{formatCurrency(details.income)}</span>
+          </div>
+          {details.salaryDeduction > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-success)', fontSize: '0.76rem' }}>
+              <span>Standard Deduction (Sec 16(ia)):</span>
+              <span>-{formatCurrency(details.salaryDeduction)}</span>
+            </div>
+          )}
+          {details.rentDeduction > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-success)', fontSize: '0.76rem' }}>
+              <span>HP Standard Deduction (Sec 24(a)):</span>
+              <span>-{formatCurrency(details.rentDeduction)}</span>
+            </div>
+          )}
+          {details.capitalGains > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-success)', fontSize: '0.76rem' }}>
+              <span>LTCG Exemption u/s 112A (Max ₹1.25L):</span>
+              <span>-{formatCurrency(Math.min(details.capitalGains, 125000))}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #f1f5f9' }}>
+            <span>Net Taxable Income:</span>
+            <span style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>{formatCurrency(details.taxableIncome)}</span>
+          </div>
+        </div>
+
+        {/* Slab Details */}
+        <div style={{ fontWeight: 600, fontSize: '0.76rem', color: 'var(--color-primary)', marginTop: '8px', marginBottom: '4px' }}>
+          Normal Income Slabs Tax:
+        </div>
         <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: '0 0 10px 0' }}>
-          {details.slabs.map((s, idx) => (
-            <li key={idx} style={{ marginBottom: '4px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
-              <span>{s.label} {s.rate === 0 ? '(Nil)' : `(${(s.rate * 100)}% on ${formatCurrency(s.incomeInSlab)})`}:</span>
-              <span style={{ fontWeight: 500, color: 'var(--color-text-main)' }}>
-                {s.rate === 0 ? '₹0' : `+${formatCurrency(s.taxInSlab)}`}
-              </span>
+          {details.slabs.length === 0 ? (
+            <li style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
+              <span>Normal income is Nil:</span>
+              <span style={{ fontWeight: 500, color: 'var(--color-text-main)' }}>₹0</span>
             </li>
-          ))}
+          ) : (
+            details.slabs.map((s, idx) => (
+              <li key={idx} style={{ marginBottom: '4px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
+                <span>{s.label} {s.rate === 0 ? '(Nil)' : `(${(s.rate * 100)}% on ${formatCurrency(s.incomeInSlab)})`}:</span>
+                <span style={{ fontWeight: 500, color: 'var(--color-text-main)' }}>
+                  {s.rate === 0 ? '₹0' : `+${formatCurrency(s.taxInSlab)}`}
+                </span>
+              </li>
+            ))
+          )}
         </ul>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, borderTop: '1px solid #cbd5e1', paddingTop: '6px', marginTop: '6px', color: 'var(--color-primary)' }}>
           <span>Base Tax Subtotal:</span>
@@ -269,6 +421,16 @@ export default function ComparisonPage() {
             (HUF is not eligible for Sec 87A rebate)
           </div>
         )}
+
+        {/* LTCG u/s 112A Tax line */}
+        {details.capitalGains > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-accent-gold-dark)', fontWeight: 600, marginTop: '8px', borderTop: '1px dashed #cbd5e1', paddingTop: '6px' }}>
+            <span>LTCG Tax @ 12.5% (Sec 112A):</span>
+            <span>+{formatCurrency(details.ltcgTax)}</span>
+          </div>
+        )}
+
+
         {details.surcharge > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f43f5e', fontWeight: 600, marginTop: '4px' }}>
             <span>Surcharge ({(details.surchargeRate * 100)}%):</span>
@@ -426,138 +588,351 @@ export default function ComparisonPage() {
         </p>
 
         {/* Interactive Gift Calculator Widget */}
-        <div className="interactive-calculator" style={{ marginBottom: '40px', border: '1px solid rgba(180, 138, 62, 0.3)', borderRadius: 'var(--border-radius-md)', padding: '30px' }}>
-          <h3 style={{ fontSize: '1.25rem', color: 'var(--color-primary)', marginBottom: '20px', textAlign: 'center', fontFamily: 'var(--font-serif)', borderBottom: 'none', paddingBottom: 0 }}>
-            ⚡ Interactive HUF Gift Tax Calculator
+        <div className="interactive-calculator" style={{ marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '1.25rem', color: 'var(--color-primary)', marginBottom: '16px', textAlign: 'center', fontFamily: 'var(--font-serif)', borderBottom: 'none', paddingBottom: 0 }}>
+            ⚡ Interactive HUF Gift Tax Calculator & Scenario Explorer
           </h3>
-          <div className="grid-2-col" style={{ alignItems: 'stretch', gap: '30px' }}>
-            {/* Inputs */}
-            <div style={{ background: '#f8fafc', padding: '24px', borderRadius: 'var(--border-radius-sm)', border: 'var(--border-glass)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label htmlFor="gift-asset-type" style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px', display: 'block', color: 'var(--color-primary)' }}>Select Asset Type:</label>
-                <select 
-                  id="gift-asset-type" 
-                  value={giftAssetType}
-                  onChange={(e) => setGiftAssetType(e.target.value)}
-                  style={{ width: '100%', padding: '12px', border: '1px solid rgba(226, 232, 240, 1)', borderRadius: 'var(--border-radius-sm)', fontSize: '0.9rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)', backgroundColor: '#ffffff', cursor: 'pointer' }}
+          <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', textAlign: 'center', marginBottom: '24px', lineHeight: 1.5 }}>
+            Each of the five legal scenarios below can be configured with its own amount and asset type. Click on any header to expand its specific calculator, customize the inputs, and inspect the corresponding tax and clubbing implications.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {[
+              {
+                id: 'karta-coparcener-to-huf',
+                title: '🎁 Gifted by Karta or Coparcener to HUF',
+                subtitle: 'Funds or assets contributed by the Karta or children (equal birthright members) to the HUF pool.',
+                amount: giftAmtKartaCoparcenerToHuf,
+                setAmount: setGiftAmtKartaCoparcenerToHuf,
+                asset: giftAssetKartaCoparcenerToHuf,
+                setAsset: setGiftAssetKartaCoparcenerToHuf,
+                scenario: 'karta-coparcener-to-huf'
+              },
+              {
+                id: 'member-to-huf',
+                title: '🎁 Gifted by a Member to HUF',
+                subtitle: 'From non-coparcener members of the HUF (such as the Karta\'s spouse or daughters-in-law) to the HUF pool.',
+                amount: giftAmtMemberToHuf,
+                setAmount: setGiftAmtMemberToHuf,
+                asset: giftAssetMemberToHuf,
+                setAsset: setGiftAssetMemberToHuf,
+                scenario: 'member-to-huf'
+              },
+              {
+                id: 'nonmember-to-huf',
+                title: '🎁 Gifted by a Non-Member to HUF',
+                subtitle: 'Gifts received by the HUF from friends, business clients, third parties, or non-member relatives.',
+                amount: giftAmtNonMemberToHuf,
+                setAmount: setGiftAmtNonMemberToHuf,
+                asset: giftAssetNonMemberToHuf,
+                setAsset: setGiftAssetNonMemberToHuf,
+                scenario: 'nonmember-to-huf'
+              },
+              {
+                id: 'huf-to-coparcener',
+                title: '🎁 Gifted by HUF to Karta or Coparcener',
+                subtitle: 'HUF distributing family assets/funds to Karta or children (equal birthright members).',
+                amount: giftAmtHufToKartaCoparcener,
+                setAmount: setGiftAmtHufToKartaCoparcener,
+                asset: giftAssetHufToKartaCoparcener,
+                setAsset: setGiftAssetHufToKartaCoparcener,
+                scenario: 'huf-to-coparcener'
+              },
+              {
+                id: 'huf-to-spouse',
+                title: '🎁 Gifted by HUF to Spouse (Non-Coparcener)',
+                subtitle: 'HUF distributing funds or assets to Karta\'s spouse (who is a member but not a coparcener).',
+                amount: giftAmtHufToSpouse,
+                setAmount: setGiftAmtHufToSpouse,
+                asset: giftAssetHufToSpouse,
+                setAsset: setGiftAssetHufToSpouse,
+                scenario: 'huf-to-spouse'
+              }
+            ].map((scen) => {
+              const isExpanded = expandedScenario === scen.id;
+              const result = getGiftCalculation(scen.amount, scen.asset, scen.scenario);
+
+              return (
+                <div 
+                  key={scen.id} 
+                  className="accordion-card" 
+                  style={{ 
+                    border: isExpanded ? '1px solid rgba(180, 138, 62, 0.45)' : '1px solid #cbd5e1',
+                    borderRadius: '12px', 
+                    backgroundColor: isExpanded ? '#ffffff' : '#f8fafc',
+                    overflow: 'hidden',
+                    boxShadow: isExpanded ? '0 4px 12px rgba(180, 138, 62, 0.08)' : 'none',
+                    transition: 'all 0.25s ease'
+                  }}
                 >
-                  <option value="cash">💰 Cash / Funds / Bank Transfer</option>
-                  <option value="immovable">🏠 Immovable Property (House, Plot, Land)</option>
-                  <option value="movable">📈 Movable Property (Shares, Gold, Mutual Funds)</option>
-                </select>
-              </div>
-              
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label htmlFor="gift-amount" style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px', display: 'block', color: 'var(--color-primary)' }}>
-                  {giftAssetType === 'cash' ? 'Gift Amount (₹):' : 
-                   giftAssetType === 'immovable' ? 'Stamp Duty Value of Property (₹):' : 
-                   'Fair Market Value of Asset (₹):'}
-                </label>
-                <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span className="currency-prefix" style={{ position: 'absolute', left: '16px', fontWeight: 600, color: 'var(--color-text-muted)' }}>₹</span>
-                  <input 
-                    type="number" 
-                    id="gift-amount" 
-                    value={giftAmount}
-                    min="0"
-                    step="5000"
-                    onChange={(e) => setGiftAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{ width: '100%', padding: '12px 12px 12px 36px', border: '1px solid rgba(226, 232, 240, 1)', borderRadius: 'var(--border-radius-sm)', fontSize: '1rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)', backgroundColor: '#ffffff' }}
-                  />
+                  {/* Header click area */}
+                  <div 
+                    onClick={() => setExpandedScenario(isExpanded ? null : scen.id)}
+                    style={{ 
+                      padding: '18px 24px', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      userSelect: 'none',
+                      borderBottom: isExpanded ? '1px solid #cbd5e1' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '78%' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                        {scen.title}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: 1.35 }}>
+                        {scen.subtitle}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <span style={{ 
+                        fontSize: '0.7rem', 
+                        fontWeight: 700, 
+                        backgroundColor: result.taxRateColor === 'var(--color-success)' ? 'var(--color-success-light)' : 'var(--color-accent-gold-light)', 
+                        color: result.taxRateColor === 'var(--color-success)' ? 'var(--color-success)' : 'var(--color-accent-gold-dark)', 
+                        padding: '3px 8px', 
+                        borderRadius: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {result.taxRateText}
+                      </span>
+                      <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                        {isExpanded ? '▼' : '►'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Collapsible content */}
+                  {isExpanded && (
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                      {/* Inputs panel */}
+                      <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid #cbd5e1' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '8px', display: 'block', color: 'var(--color-primary)' }}>Select Asset Type:</label>
+                          <select 
+                            value={scen.asset}
+                            onChange={(e) => scen.setAsset(e.target.value)}
+                            style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)', backgroundColor: '#ffffff', cursor: 'pointer' }}
+                          >
+                            <option value="cash">💰 Cash / Bank Transfer</option>
+                            <option value="immovable">🏠 Immovable Property (Stamp Duty Value)</option>
+                            <option value="movable">📈 Movable Assets (Shares, Gold, FMV)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '8px', display: 'block', color: 'var(--color-primary)' }}>
+                            {scen.asset === 'cash' ? 'Gift Amount (₹):' : 
+                             scen.asset === 'immovable' ? 'Stamp Duty Value of Property (₹):' : 
+                             'Fair Market Value of Asset (₹):'}
+                          </label>
+                          <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <span className="currency-prefix" style={{ position: 'absolute', left: '12px', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>₹</span>
+                            <input 
+                              type="number" 
+                              value={scen.amount}
+                              min="0"
+                              step="5000"
+                              onChange={(e) => scen.setAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                              style={{ width: '100%', padding: '10px 10px 10px 24px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)', backgroundColor: '#ffffff' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Outputs panel */}
+                      <div style={{ background: 'var(--color-accent-gold-light)', borderRadius: '8px', padding: '20px', border: '1px solid rgba(180, 138, 62, 0.15)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '6px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}>Taxable Amount:</span>
+                            <strong style={{ color: 'var(--color-text-main)' }}>{formatCurrency(result.taxableAmt)}</strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '6px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}>Standalone Tax (HUF):</span>
+                            <strong style={{ color: result.giftTaxPayable > 0 ? '#f43f5e' : 'var(--color-success)' }}>
+                              {result.giftTaxPayable > 0 ? formatCurrency(result.giftTaxPayable) : '₹0 (Exempt)'}
+                            </strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '6px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}>Effective Standalone Rate:</span>
+                            <strong style={{ color: result.giftEffectiveRate > 0 ? '#f43f5e' : 'var(--color-success)' }}>
+                              {result.giftEffectiveRate.toFixed(2)}%
+                            </strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '6px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}>Future Income Clubbing:</span>
+                            <strong style={{ color: result.clubbingStatusColor }}>{result.clubbingStatusText}</strong>
+                          </div>
+
+                          <div 
+                            style={{ fontSize: '0.78rem', lineHeight: 1.45, color: 'var(--color-text-main)', marginTop: '8px' }}
+                            dangerouslySetInnerHTML={{ __html: result.clauseDesc }}
+                          />
+                        </div>
+                        
+                        <div 
+                          style={{ background: 'white', borderRadius: '6px', padding: '10px 12px', borderLeft: '4px solid var(--color-accent-gold-dark)', fontSize: '0.75rem', lineHeight: 1.4, color: 'var(--color-text-muted)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+                          dangerouslySetInnerHTML={{ __html: result.strategyTip }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
+              );
+            })}
+          </div>
+
+          {/* Overall Gift Summary & Total Tax Liability Card */}
+          <div 
+            style={{ 
+              marginTop: '24px', 
+              padding: '24px', 
+              backgroundColor: 'var(--color-primary)', 
+              color: '#ffffff', 
+              borderRadius: '12px', 
+              boxShadow: 'var(--shadow-soft)', 
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              fontFamily: 'var(--font-sans)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.5rem' }}>📊</span>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: '#ffffff', fontFamily: 'var(--font-serif)', border: 'none', padding: 0 }}>
+                  Aggregate Gift Transactions & Tax Liability
+                </h4>
               </div>
-              
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '8px', display: 'block', color: 'var(--color-primary)' }}>Select Gift Scenario:</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label className="radio-label" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', lineHeight: 1.4, color: 'var(--color-text-main)', justifyContent: 'flex-start' }}>
-                    <input 
-                      type="radio" 
-                      name="gift-scenario" 
-                      value="member-to-huf" 
-                      checked={giftScenario === 'member-to-huf'}
-                      onChange={() => setGiftScenario('member-to-huf')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
-                    />
-                    <div>
-                      <strong>Gifted by a Member to HUF</strong>
-                      <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>From Karta, Coparcener, or Spouse to the HUF pool</span>
-                    </div>
-                  </label>
-                  <label className="radio-label" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', lineHeight: 1.4, color: 'var(--color-text-main)', justifyContent: 'flex-start' }}>
-                    <input 
-                      type="radio" 
-                      name="gift-scenario" 
-                      value="nonmember-to-huf" 
-                      checked={giftScenario === 'nonmember-to-huf'}
-                      onChange={() => setGiftScenario('nonmember-to-huf')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
-                    />
-                    <div>
-                      <strong>Gifted by a Non-Member to HUF</strong>
-                      <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>From friends, third parties, or non-member relatives</span>
-                    </div>
-                  </label>
-                  <label className="radio-label" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', lineHeight: 1.4, color: 'var(--color-text-main)', justifyContent: 'flex-start' }}>
-                    <input 
-                      type="radio" 
-                      name="gift-scenario" 
-                      value="huf-to-coparcener" 
-                      checked={giftScenario === 'huf-to-coparcener'}
-                      onChange={() => setGiftScenario('huf-to-coparcener')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
-                    />
-                    <div>
-                      <strong>Gifted by HUF to Karta or Coparcener</strong>
-                      <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>HUF gifting funds/property to Karta or children (equal birthright)</span>
-                    </div>
-                  </label>
-                  <label className="radio-label" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.88rem', lineHeight: 1.4, color: 'var(--color-text-main)', justifyContent: 'flex-start' }}>
-                    <input 
-                      type="radio" 
-                      name="gift-scenario" 
-                      value="huf-to-spouse" 
-                      checked={giftScenario === 'huf-to-spouse'}
-                      onChange={() => setGiftScenario('huf-to-spouse')}
-                      style={{ marginTop: '3px', cursor: 'pointer' }}
-                    />
-                    <div>
-                      <strong>Gifted by HUF to Spouse (Non-Coparcener)</strong>
-                      <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>HUF gifting to Karta's spouse or daughters-in-law</span>
-                    </div>
-                  </label>
-                </div>
+              <span className="badge-accent" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Summary
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', margin: 0, opacity: 0.9, lineHeight: 1.45 }}>
+              This summary aggregates the tax implications of all configured gift inputs above (both inflows to the HUF and distributions to coparceners or spouse).
+            </p>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '16px',
+              marginTop: '8px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+              paddingTop: '16px'
+            }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <span style={{ fontSize: '0.76rem', opacity: 0.8, display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Inward Gifts</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, display: 'block' }}>{formatCurrency(giftSummary.totalReceived)}</span>
+                <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'block', marginTop: '4px' }}>From Members & Non-Members</span>
+              </div>
+
+              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <span style={{ fontSize: '0.76rem', opacity: 0.8, display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Outward Gifts</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, display: 'block' }}>{formatCurrency(giftSummary.totalDistributed)}</span>
+                <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'block', marginTop: '4px' }}>To Coparceners & Spouse</span>
+              </div>
+
+              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <span style={{ fontSize: '0.76rem', opacity: 0.8, display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Taxable Gifts</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, display: 'block' }}>{formatCurrency(giftSummary.totalTaxable)}</span>
+                <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'block', marginTop: '4px' }}>Subject to tax u/s 56(2)(x)</span>
+              </div>
+
+              <div style={{ 
+                background: giftSummary.totalTax > 0 ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                padding: '16px', 
+                borderRadius: '8px', 
+                border: giftSummary.totalTax > 0 ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)' 
+              }}>
+                <span style={{ fontSize: '0.76rem', opacity: 0.9, display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px', color: giftSummary.totalTax > 0 ? '#fda4af' : '#a7f3d0' }}>
+                  Total Tax Liability
+                </span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 800, display: 'block', color: giftSummary.totalTax > 0 ? '#f43f5e' : '#10b981' }}>
+                  {formatCurrency(giftSummary.totalTax)}
+                </span>
+                <span style={{ fontSize: '0.68rem', opacity: 0.8, display: 'block', marginTop: '4px' }}>
+                  {giftSummary.totalTax > 0 ? 'Payable under new tax slabs' : 'Fully tax-exempt / under basic slab'}
+                </span>
               </div>
             </div>
 
-            {/* Dynamic Outputs */}
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'var(--color-accent-gold-light)', borderRadius: 'var(--border-radius-sm)', padding: '24px', border: '1px solid rgba(180, 138, 62, 0.15)' }}>
-              <div>
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-accent-gold-dark)', letterSpacing: '1.5px', marginBottom: '15px', textTransform: 'uppercase' }}>TAXATION BREAKDOWN</h4>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--color-text-muted)' }}>Taxable Amount:</span>
-                  <strong style={{ color: 'var(--color-text-main)' }}>{formatCurrency(giftResult.taxableAmt)}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--color-text-muted)' }}>Tax Rate / Liability:</span>
-                  <strong style={{ color: giftResult.taxRateColor }}>{giftResult.taxRateText}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.9rem', borderBottom: '1px dashed rgba(180, 138, 62, 0.2)', paddingBottom: '8px' }}>
-                  <span style={{ color: 'var(--color-text-muted)' }}>Future Income Clubbing:</span>
-                  <strong style={{ color: giftResult.clubbingStatusColor }}>{giftResult.clubbingStatusText}</strong>
-                </div>
-                <div 
-                  style={{ fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--color-text-main)', marginBottom: 0, paddingTop: '4px' }}
-                  dangerouslySetInnerHTML={{ __html: giftResult.clauseDesc }}
-                />
+            {giftSummary.totalTax > 0 && (
+              <div style={{ backgroundColor: 'rgba(244, 63, 94, 0.1)', padding: '12px 16px', borderRadius: '6px', borderLeft: '4px solid #f43f5e', fontSize: '0.75rem', lineHeight: 1.45 }}>
+                ⚠️ <strong>Tax Optimization Alert:</strong> You have a total tax liability of <strong>{formatCurrency(giftSummary.totalTax)}</strong> on gifts. This is primarily triggered by high-value gifts from non-members exceeding the ₹50,000 threshold. Consider restructuring these inflows as interest-bearing loans or distributing gifts across multiple financial years to stay within tax-exempt limits.
               </div>
-              
-              <div 
-                style={{ background: 'white', borderRadius: '6px', padding: '12px', borderLeft: '4px solid var(--color-accent-gold-dark)', fontSize: '0.78rem', lineHeight: 1.4, color: 'var(--color-text-muted)', marginTop: '15px', boxShadow: 'var(--shadow-soft)' }}
-                dangerouslySetInnerHTML={{ __html: giftResult.strategyTip }}
-              />
-            </div>
+            )}
+          </div>
+        </div>
+
+        {/* HUF Income & Gift Taxation Quick Reference Table */}
+        <div style={{ marginBottom: '40px', backgroundColor: '#ffffff', borderRadius: 'var(--border-radius-md)', padding: '24px', border: '1px solid rgba(180, 138, 62, 0.25)', boxShadow: 'var(--shadow-soft)' }}>
+          <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontFamily: 'var(--font-serif)', marginBottom: '16px', borderBottom: '2px solid var(--color-accent-gold-light)', paddingBottom: '6px', fontWeight: 700 }}>
+            📋 HUF Income & Gift Taxation Reference Guide (At a Glance)
+          </h4>
+          <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+            This quick reference table outlines how different types of gifts and incoming streams are taxed under the HUF under the Income Tax Act, 1961.
+          </p>
+          <div className="table-responsive">
+            <table className="data-table" style={{ fontSize: '0.82rem' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'var(--color-primary-light)' }}>
+                  <th style={{ padding: '10px' }}>Income Source / Gift Type</th>
+                  <th style={{ padding: '10px' }}>Taxability & Exemption Limit</th>
+                  <th style={{ padding: '10px' }}>Tax Rate on HUF</th>
+                  <th style={{ padding: '10px' }}>IT Act Section</th>
+                  <th style={{ padding: '10px' }}>Clubbing Implications</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>🎁 Gift from HUF Member (Relative)</strong></td>
+                  <td>100% Tax-Free on receipt</td>
+                  <td style={{ color: 'var(--color-success)', fontWeight: 600 }}>Exempt (0%)</td>
+                  <td>Section 56(2)(x)</td>
+                  <td><strong style={{ color: '#f43f5e' }}>Yes (Sec 64(2)):</strong> Direct income from gift is clubbed with the gifting member. Reinvested income (income-on-income) is not clubbed.</td>
+                </tr>
+                <tr>
+                  <td><strong>🎁 Gift from Non-Member</strong></td>
+                  <td>Exempt up to <strong>₹50,000/year</strong> (aggregate)</td>
+                  <td style={{ color: 'var(--color-text-main)' }}>Exempt up to ₹50k. If &gt; ₹50k, <strong>entire amount</strong> taxed at HUF slabs.</td>
+                  <td>Section 56(2)(x)</td>
+                  <td><strong style={{ color: 'var(--color-success)' }}>No:</strong> Wealth grows inside the HUF without any clubbing rules.</td>
+                </tr>
+                <tr>
+                  <td><strong>🏠 House Rental Income</strong></td>
+                  <td>Standard Deduction of <strong>30%</strong> allowed</td>
+                  <td style={{ color: 'var(--color-text-main)' }}>Taxed at HUF slabs (only on 70% net value)</td>
+                  <td>Section 24(a)</td>
+                  <td>Deemed ownership rules apply if property was originally gifted by a member. Route rentals via ancestral assets or interest loans instead.</td>
+                </tr>
+                <tr>
+                  <td><strong>🏦 FD & Savings Interest</strong></td>
+                  <td>Fully taxable</td>
+                  <td style={{ color: 'var(--color-text-main)' }}>Taxed at HUF slab rates</td>
+                  <td>Section 56(2)(x)</td>
+                  <td>Clubbed with member if funded by member's direct cash gift. Avoid by funding via interest-bearing loans.</td>
+                </tr>
+                <tr>
+                  <td><strong>📈 Capital Gains (Stocks/MFs)</strong></td>
+                  <td>Separate annual exemption of <strong>₹1.25 Lakhs</strong> for LTCG</td>
+                  <td style={{ color: 'var(--color-accent-gold-dark)', fontWeight: 600 }}>12.5% on LTCG above ₹1.25L. STCG taxed at 20%.</td>
+                  <td>Section 112A / 111A</td>
+                  <td>Clubbed with member if original corpus was a member's gift. Strategy: Reinvest capital gains to block further clubbing.</td>
+                </tr>
+                <tr>
+                  <td><strong>⚙️ Business & Professional</strong></td>
+                  <td>Deductible business expenses & member remunerations</td>
+                  <td style={{ color: 'var(--color-text-main)' }}>Taxed at HUF slab rates</td>
+                  <td>Section 28 (PGBP)</td>
+                  <td><strong style={{ color: 'var(--color-success)' }}>No clubbing:</strong> Cleanest way to grow family wealth. Salaries paid to members are deductible business expenses.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -799,6 +1174,49 @@ export default function ComparisonPage() {
                 ✓ Can be routed to HUF
               </span>
             </div>
+
+            {/* Gift Income */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                🎁 Gift from anyone
+              </label>
+              <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span style={{ position: 'absolute', left: '12px', fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>₹</span>
+                <input 
+                  type="number"
+                  value={incomeGift}
+                  min="0"
+                  step="5000"
+                  onChange={(e) => handleSourceChange(setIncomeGift, e.target.value)}
+                  style={{ width: '100%', padding: '10px 10px 10px 24px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)' }}
+                />
+              </div>
+              <span style={{ fontSize: '0.7rem', color: incomeGift > 50000 ? '#f43f5e' : 'var(--color-success)', display: 'block', marginTop: '4px' }}>
+                {incomeGift > 50000 ? '⚠️ Entire amount is taxable' : '✓ Exempt (≤ ₹50,000)'}
+              </span>
+            </div>
+
+            {/* Dividend Income */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', marginBottom: '6px', color: 'var(--color-text-main)' }}>
+                📊 Dividend Income
+              </label>
+              <div className="input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span style={{ position: 'absolute', left: '12px', fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>₹</span>
+                <input 
+                  type="number"
+                  value={incomeDividend}
+                  min="0"
+                  step="5000"
+                  onChange={(e) => handleSourceChange(setIncomeDividend, e.target.value)}
+                  style={{ width: '100%', padding: '10px 10px 10px 24px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', fontFamily: 'var(--font-sans)', color: 'var(--color-text-main)' }}
+                />
+              </div>
+              <span style={{ fontSize: '0.7rem', color: 'var(--color-success)', display: 'block', marginTop: '4px' }}>
+                ✓ Can be routed to HUF
+              </span>
+            </div>
+
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #cbd5e1', paddingTop: '14px', marginTop: '14px' }}>
@@ -1154,6 +1572,42 @@ export default function ComparisonPage() {
                 <div style={{ background: 'rgba(255,255,255,0.4)', padding: '12px 15px', borderRadius: '8px', borderLeft: '4px solid #cbd5e1' }}>
                   <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
                     ⚙️ <strong>Business Income:</strong> Not currently entered. Routing new consulting or business revenues directly through your HUF is highly tax-efficient.
+                  </span>
+                </div>
+              )}
+
+              {/* Dividend Suggestion */}
+              {incomeDividend > 0 ? (
+                <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
+                  <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
+                    📊 Dividend Income ({formatCurrency(incomeDividend)}) — Route via HUF
+                  </strong>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
+                    Dividend income is taxed at normal progressive slabs. If your individual tax bracket is high, routing dividend-paying shares to the HUF lets you pay tax at the HUF's lower slabs, saving significant taxes.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ background: 'rgba(255,255,255,0.4)', padding: '12px 15px', borderRadius: '8px', borderLeft: '4px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
+                    📊 <strong>Dividend Income:</strong> Not currently entered. Routing dividend-yielding portfolios through the HUF can optimize progressive tax slab utilization.
+                  </span>
+                </div>
+              )}
+
+              {/* Gift Suggestion */}
+              {incomeGift > 0 ? (
+                <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
+                  <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
+                    🎁 Gift from Non-Member ({formatCurrency(incomeGift)}) — Section 56(2)(x) Tax Planning
+                  </strong>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
+                    Gifts received from non-members exceeding ₹50,000 are fully taxable under Section 56(2)(x). <strong style={{ color: 'var(--color-text-main)' }}>Strategy:</strong> Splitting the gift or routing it to the HUF (which enjoys its own separate basic exemption limit of ₹4 Lakhs) helps minimize the tax bracket. Also, note that gifts received by HUF from non-members are completely free of clubbing rules (Section 64 does not apply to non-member transfers), allowing you to reinvest the proceeds and grow the wealth entirely within the HUF tax-free.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ background: 'rgba(255,255,255,0.4)', padding: '12px 15px', borderRadius: '8px', borderLeft: '4px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
+                    🎁 <strong>Gift from Non-Member:</strong> Not currently entered. Non-member gifts to the HUF avoid Section 64 clubbing and let you build independent family portfolios.
                   </span>
                 </div>
               )}
