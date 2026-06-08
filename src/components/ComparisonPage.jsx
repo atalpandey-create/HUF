@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import {
   formatCurrency,
   formatSimpleBrief,
-  getDetailedTaxBreakdown
+  getDetailedTaxBreakdown,
+  getOptimalSplit
 } from '../utils/taxCalculator';
 
 export default function ComparisonPage() {
@@ -141,23 +142,7 @@ export default function ComparisonPage() {
   }, [incomeRent, incomeInterest, incomeCapitalGains, incomeBusiness]);
 
   const optimizedSplit = useMemo(() => {
-    const salary = incomeSalary;
-    let indInc = salary;
-    let hufInc = 0;
-    
-    // Legally Optimized Split Strategy:
-    // Keep Individual income up to ₹12 Lakhs (tax-free under New Regime due to Sec 87A rebate).
-    // Route any excess other income to HUF.
-    if (salary < 1200000) {
-      const fillAmount = Math.min(otherIncome, 1200000 - salary);
-      indInc += fillAmount;
-      hufInc = otherIncome - fillAmount;
-    } else {
-      hufInc = otherIncome;
-    }
-    
-    const optPct = otherIncome > 0 ? Math.round((hufInc / otherIncome) * 100) : 0;
-    return { hufInc, indInc, optPct };
+    return getOptimalSplit(incomeSalary, otherIncome);
   }, [incomeSalary, otherIncome]);
 
   const scenarioSplit = useMemo(() => {
@@ -181,17 +166,16 @@ export default function ComparisonPage() {
   const grow30Val = compoundingSavings * ((Math.pow(1 + rate, 30) - 1) / rate);
 
   const allocationExplanation = useMemo(() => {
-    const salary = incomeSalary;
     if (finalIncome <= 1200000) {
       return `Since your total family income is ${formatCurrency(finalIncome)}, which is under the Individual tax-free limit of ₹12 Lakhs (due to the Section 87A rebate), you do not need to divert any income to the HUF to save tax. Keeping 100% in your individual name is 100% tax-free. Diverting income to the HUF actually triggers tax u/s slabs since the HUF is not eligible for Section 87A rebate.`;
     }
-    if (salary >= 1200000) {
-      return `Since your individual salary of ${formatCurrency(salary)} is already above the ₹12 Lakhs tax-free threshold, any other income under your name will be taxed at 15% to 30%. Therefore, you should keep 100% of your eligible other income (${formatCurrency(otherIncome)}) in the HUF to utilize the HUF's separate progressive slabs (starting with ₹4 Lakhs at 0% tax).`;
+    
+    if (optimizedSplit.optPct === 0) {
+      return `Keeping 100% of your income under your Individual name is the most tax-efficient route for your current income structure.`;
     }
-    const fillAmount = 1200000 - salary;
-    const recommendedHuf = otherIncome - fillAmount;
-    return `Your salary is ${formatCurrency(salary)}, which is below the ₹12 Lakhs tax-free limit. You should keep ${formatCurrency(fillAmount)} of your other income in your individual name to fully utilize your ₹12 Lakhs tax-free limit. The rest of the other income (${formatCurrency(recommendedHuf)}) should be kept in the HUF to utilize the HUF's separate tax slabs, giving you a total tax-free buffer of ₹16 Lakhs across both profiles!`;
-  }, [incomeSalary, finalIncome, otherIncome]);
+    
+    return `By evaluating all possible allocations from 0% to 100%, the system determined that diverting ${optimizedSplit.optPct}% (${formatCurrency(optimizedSplit.hufInc)}) of your other income to the HUF and keeping the rest individually yields the highest tax savings of ${formatCurrency(optimizedSplit.maxSavings)} per year. This mathematical optimum carefully balances progressive tax slabs on both sides and stays below critical surcharge thresholds (such as ₹50 Lakhs or ₹1 Crore) to minimize surcharge rates.`;
+  }, [incomeSalary, finalIncome, optimizedSplit]);
 
   const handleScenBtnClick = (id) => {
     setActiveScenBtn(id);
@@ -210,15 +194,8 @@ export default function ComparisonPage() {
     setIncomeBusiness(bus);
 
     const presetOther = rent + intVal + capGains + bus;
-    let optHuf = 0;
-    if (sal < 1200000) {
-      const fill = Math.min(presetOther, 1200000 - sal);
-      optHuf = presetOther - fill;
-    } else {
-      optHuf = presetOther;
-    }
-    const optPct = presetOther > 0 ? Math.round((optHuf / presetOther) * 100) : 0;
-    setDivertPct(optPct);
+    const opt = getOptimalSplit(sal, presetOther);
+    setDivertPct(opt.optPct);
   };
 
   const handleSourceChange = (setter, val) => {
@@ -863,29 +840,71 @@ export default function ComparisonPage() {
               background: '#f1f5f9', 
               padding: '12px 16px', 
               borderRadius: '8px', 
-              border: '1px solid #cbd5e1' 
+              border: '1px solid #cbd5e1',
+              flexDirection: (optimizedSplit.optPcts && optimizedSplit.optPcts.length > 1 && optimizedSplit.maxSavings > 0) ? 'column' : 'row',
+              alignItems: (optimizedSplit.optPcts && optimizedSplit.optPcts.length > 1 && optimizedSplit.maxSavings > 0) ? 'flex-start' : 'center',
+              gap: '12px'
             }}>
-              <div style={{ fontSize: '0.82rem', color: 'var(--color-text-main)', maxWidth: '72%', lineHeight: 1.4 }}>
-                💡 <strong>Recommended:</strong> Divert <strong>{optimizedSplit.optPct}%</strong> ({formatCurrency(optimizedSplit.hufInc)}) to HUF.
-              </div>
-              <button
-                onClick={() => setDivertPct(optimizedSplit.optPct)}
-                disabled={divertPct === optimizedSplit.optPct}
-                className="btn"
-                style={{
-                  width: 'auto',
-                  fontSize: '0.78rem',
-                  padding: '6px 12px',
-                  backgroundColor: divertPct === optimizedSplit.optPct ? '#cbd5e1' : 'var(--color-primary)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: divertPct === optimizedSplit.optPct ? 'not-allowed' : 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                ⚡ Apply Recommendation
-              </button>
+              {optimizedSplit.optPcts && optimizedSplit.optPcts.length > 1 && optimizedSplit.maxSavings > 0 ? (
+                <div style={{ width: '100%' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-main)', lineHeight: 1.4, marginBottom: '8px' }}>
+                    💡 <strong>Recommended (Multiple Optimal Splits):</strong> There are multiple symmetric splits that save the exact same maximum tax of <strong>{formatCurrency(optimizedSplit.maxSavings)}</strong>:
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                    {optimizedSplit.optPcts.map((pct, idx) => {
+                      const hufAmt = otherIncome * (pct / 100);
+                      const isSelected = divertPct === pct;
+                      return (
+                        <button
+                          key={pct}
+                          onClick={() => setDivertPct(pct)}
+                          className="btn"
+                          style={{
+                            width: 'auto',
+                            fontSize: '0.78rem',
+                            padding: '6px 12px',
+                            backgroundColor: isSelected ? 'var(--color-accent-gold-dark)' : 'var(--color-primary)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {isSelected ? '✓' : '⚡'} Option {idx + 1}: Divert {pct}% ({formatCurrency(hufAmt)})
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--color-text-main)', maxWidth: '72%', lineHeight: 1.4 }}>
+                    💡 <strong>Recommended:</strong> Divert <strong>{optimizedSplit.optPct}%</strong> ({formatCurrency(optimizedSplit.hufInc)}) to HUF.
+                  </div>
+                  <button
+                    onClick={() => setDivertPct(optimizedSplit.optPct)}
+                    disabled={divertPct === optimizedSplit.optPct}
+                    className="btn"
+                    style={{
+                      width: 'auto',
+                      fontSize: '0.78rem',
+                      padding: '6px 12px',
+                      backgroundColor: divertPct === optimizedSplit.optPct ? '#cbd5e1' : 'var(--color-primary)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: divertPct === optimizedSplit.optPct ? 'not-allowed' : 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    ⚡ Apply Recommendation
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Strategy Explanation Card */}

@@ -260,3 +260,46 @@ export function getDetailedTaxBreakdown(income, isIndividual) {
         totalTax
     };
 }
+
+export function getOptimalSplit(salary, otherIncome) {
+    if (otherIncome <= 0) {
+        return { hufInc: 0, indInc: salary, optPct: 0, optPcts: [0], maxSavings: 0 };
+    }
+
+    const taxNoHuf = getDetailedTaxBreakdown(salary + otherIncome, true).totalTax;
+
+    let minTax = Infinity;
+    const taxes = [];
+
+    // Calculate combined tax for all percentages
+    for (let p = 0; p <= 100; p++) {
+        const huf = otherIncome * (p / 100);
+        const ind = salary + (otherIncome - huf);
+
+        const taxInd = getDetailedTaxBreakdown(ind, true).totalTax;
+        const taxHuf = getDetailedTaxBreakdown(huf, false).totalTax;
+        const totalTax = taxInd + taxHuf;
+
+        taxes.push(totalTax);
+        if (totalTax < minTax) {
+            minTax = totalTax;
+        }
+    }
+
+    // Collect all percentages that achieve the minimum tax (within 1 rupee tolerance)
+    const optPcts = [];
+    for (let p = 0; p <= 100; p++) {
+        if (Math.abs(taxes[p] - minTax) <= 1) {
+            optPcts.push(p);
+        }
+    }
+
+    // Default to the first option
+    const optPct = optPcts[0];
+    const hufInc = otherIncome * (optPct / 100);
+    const indInc = salary + (otherIncome - hufInc);
+    const maxSavings = Math.max(0, taxNoHuf - minTax);
+
+    return { hufInc, indInc, optPct, optPcts, maxSavings };
+}
+
