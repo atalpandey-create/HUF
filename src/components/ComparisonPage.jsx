@@ -822,7 +822,7 @@ export default function ComparisonPage() {
               max="100"
               value={divertPct}
               onChange={(e) => setDivertPct(parseInt(e.target.value) || 0)}
-              style={{ width: '100%', cursor: 'pointer', height: '6px', borderRadius: '4px', accentColor: 'var(--color-accent-gold-dark)', margin: '8px 0' }}
+              className="slider"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-text-muted)', fontWeight: 500, marginTop: '-4px' }}>
