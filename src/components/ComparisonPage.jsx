@@ -145,6 +145,17 @@ export default function ComparisonPage() {
     return getOptimalSplit(incomeSalary, otherIncome);
   }, [incomeSalary, otherIncome]);
 
+  const displayPcts = useMemo(() => {
+    const pcts = optimizedSplit.optPcts || [];
+    if (pcts.length <= 3) return pcts;
+    
+    const first = pcts[0];
+    const last = pcts[pcts.length - 1];
+    const middle = pcts[Math.floor(pcts.length / 2)];
+    
+    return [first, middle, last];
+  }, [optimizedSplit.optPcts]);
+
   const scenarioSplit = useMemo(() => {
     const salary = incomeSalary;
     const hufInc = otherIncome * (divertPct / 100);
@@ -848,12 +859,18 @@ export default function ComparisonPage() {
               {optimizedSplit.optPcts && optimizedSplit.optPcts.length > 1 && optimizedSplit.maxSavings > 0 ? (
                 <div style={{ width: '100%' }}>
                   <div style={{ fontSize: '0.82rem', color: 'var(--color-text-main)', lineHeight: 1.4, marginBottom: '8px' }}>
-                    💡 <strong>Recommended (Multiple Optimal Splits):</strong> There are multiple symmetric splits that save the exact same maximum tax of <strong>{formatCurrency(optimizedSplit.maxSavings)}</strong>:
+                    💡 <strong>Recommended (Multiple Optimal Splits):</strong> There are multiple splits that save the exact same maximum tax of <strong>{formatCurrency(optimizedSplit.maxSavings)}</strong>. Showing {displayPcts.length} options:
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-                    {optimizedSplit.optPcts.map((pct, idx) => {
+                    {displayPcts.map((pct, idx) => {
                       const hufAmt = otherIncome * (pct / 100);
                       const isSelected = divertPct === pct;
+                      let label = `Option ${idx + 1}: Divert ${pct}%`;
+                      if (optimizedSplit.optPcts.length > 3) {
+                        if (idx === 0) label = `Min: Divert ${pct}%`;
+                        else if (idx === 1) label = `Mid: Divert ${pct}%`;
+                        else if (idx === 2) label = `Max: Divert ${pct}%`;
+                      }
                       return (
                         <button
                           key={pct}
@@ -874,7 +891,7 @@ export default function ComparisonPage() {
                             gap: '4px'
                           }}
                         >
-                          {isSelected ? '✓' : '⚡'} Option {idx + 1}: Divert {pct}% ({formatCurrency(hufAmt)})
+                          {isSelected ? '✓' : '⚡'} {label} ({formatCurrency(hufAmt)})
                         </button>
                       );
                     })}
