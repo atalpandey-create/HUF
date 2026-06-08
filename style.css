@@ -470,13 +470,14 @@ p {
 .cover-scroll-prompt {
     position: absolute;
     bottom: 40px;
-    left: 80px;
+    right: 80px;
     display: flex;
     align-items: center;
     gap: 12px;
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.4);
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .arrow-down {
@@ -1333,6 +1334,11 @@ p {
     
     .cover-section {
         padding: 40px 30px;
+    }
+    
+    .cover-scroll-prompt {
+        right: 30px;
+        left: auto;
     }
     
     .objectives-grid {
