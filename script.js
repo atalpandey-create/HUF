@@ -176,6 +176,19 @@ document.addEventListener('DOMContentLoaded', () => {
             tax = 0;
         }
         
+        // Surcharge
+        let surchargeRate = 0;
+        if (income > 5000000 && income <= 10000000) {
+            surchargeRate = 0.10;
+        } else if (income > 10000000 && income <= 20000000) {
+            surchargeRate = 0.15;
+        } else if (income > 20000000) {
+            surchargeRate = 0.25;
+        }
+        
+        const surcharge = tax * surchargeRate;
+        tax += surcharge;
+        
         // Add 4% Cess
         tax = tax * 1.04;
         
@@ -298,8 +311,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const taxableAfterRebate = Math.max(0, subtotalTax - rebate);
-        const cess = taxableAfterRebate * 0.04;
-        const totalTax = taxableAfterRebate + cess;
+        
+        // Calculate Surcharge
+        let surchargeRate = 0;
+        if (income > 5000000 && income <= 10000000) {
+            surchargeRate = 0.10;
+        } else if (income > 10000000 && income <= 20000000) {
+            surchargeRate = 0.15;
+        } else if (income > 20000000) {
+            surchargeRate = 0.25;
+        }
+        
+        const surcharge = taxableAfterRebate * surchargeRate;
+        if (surcharge > 0) {
+            html += `<div style="display: flex; justify-content: space-between; color: #f43f5e; font-weight: 600; margin-top: 4px; font-size: 0.82rem;">
+                        <span>Surcharge (${(surchargeRate * 100)}%):</span>
+                        <span>+${formatCurrency(surcharge)}</span>
+                     </div>`;
+        }
+        
+        const totalBeforeCess = taxableAfterRebate + surcharge;
+        const cess = totalBeforeCess * 0.04;
+        const totalTax = totalBeforeCess + cess;
         
         html += `<div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
                     <span>Cess (4%):</span>
@@ -546,12 +579,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const taxIndividualSplit = calculateNewRegimeTax(individualIncome, true);
         const taxHufSplit = calculateNewRegimeTax(hufIncome, false); // false = HUF (No 87A rebate)
         const taxWithHuf = taxIndividualSplit + taxHufSplit;
-        const taxSaved = Math.max(0, taxNoHuf - taxWithHuf);
+        const taxSaved = taxNoHuf - taxWithHuf;
 
-        // Calculate compounding values at 12% CAGR
+        // Calculate compounding values at 12% CAGR (or clamp to 0 for growth if negative)
         const rate = 0.12;
-        const grow10Val = taxSaved * ((Math.pow(1 + rate, 10) - 1) / rate);
-        const grow30Val = taxSaved * ((Math.pow(1 + rate, 30) - 1) / rate);
+        const compoundingSavings = Math.max(0, taxSaved);
+        const grow10Val = compoundingSavings * ((Math.pow(1 + rate, 10) - 1) / rate);
+        const grow30Val = compoundingSavings * ((Math.pow(1 + rate, 30) - 1) / rate);
 
         // Update Labels
         scenIncomeLbl.textContent = formatCurrency(totalIncome);
@@ -565,7 +599,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         scenTotTaxNo.textContent = formatCurrency(taxNoHuf);
         scenTotTaxYes.textContent = formatCurrency(taxWithHuf);
-        scenSavedVal.textContent = formatCurrency(taxSaved);
+        
+        // Update color and text based on savings vs loss
+        const savedValElement = scenSavedVal;
+        const savedValLabel = savedValElement.parentElement.querySelector('span');
+        const savedValDesc = savedValElement.parentElement.querySelector('p');
+        
+        if (taxSaved >= 0) {
+            savedValElement.textContent = formatCurrency(taxSaved);
+            savedValElement.style.color = 'var(--color-success)';
+            if (savedValLabel) {
+                savedValLabel.textContent = 'ANNUAL MONEY SAVED';
+                savedValLabel.style.color = 'var(--color-success)';
+            }
+            if (savedValDesc) {
+                savedValDesc.textContent = 'Saved from direct income split';
+            }
+        } else {
+            savedValElement.textContent = '-' + formatCurrency(Math.abs(taxSaved));
+            savedValElement.style.color = '#f43f5e';
+            if (savedValLabel) {
+                savedValLabel.textContent = 'EXTRA TAX LIABILITY (LOSS)';
+                savedValLabel.style.color = '#f43f5e';
+            }
+            if (savedValDesc) {
+                savedValDesc.textContent = 'Due to loss of Section 87A rebate for HUF';
+            }
+        }
 
         scenGrow10.textContent = formatSimpleBrief(grow10Val);
         scenGrow30.textContent = formatSimpleBrief(grow30Val);
@@ -634,6 +694,136 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateScenarioView(val);
             });
         }
+    }
+
+    // ==========================================================================
+    // INTERACTIVE GIFT TAX CALCULATOR LOGIC (compare.html)
+    // ==========================================================================
+    const giftAmountInput = document.getElementById('gift-amount');
+    const giftScenarioRadios = document.querySelectorAll('input[name="gift-scenario"]');
+    const giftAssetTypeSelect = document.getElementById('gift-asset-type');
+    const giftAmountLabel = document.getElementById('gift-amount-label');
+    
+    const giftTaxableAmt = document.getElementById('gift-taxable-amt');
+    const giftTaxRate = document.getElementById('gift-tax-rate');
+    const giftClubbingStatus = document.getElementById('gift-clubbing-status');
+    const giftClauseDesc = document.getElementById('gift-clause-desc');
+    const giftStrategyTip = document.getElementById('gift-strategy-tip');
+
+    function updateGiftTaxCalculation() {
+        if (!giftAmountInput || !giftTaxableAmt || !giftTaxRate || !giftClubbingStatus || !giftClauseDesc || !giftStrategyTip) {
+            return;
+        }
+
+        const amount = parseFloat(giftAmountInput.value) || 0;
+        const assetType = giftAssetTypeSelect ? giftAssetTypeSelect.value : 'cash';
+        
+        // Update input field label based on asset type
+        if (giftAmountLabel) {
+            if (assetType === 'cash') {
+                giftAmountLabel.textContent = 'Gift Amount (₹):';
+            } else if (assetType === 'immovable') {
+                giftAmountLabel.textContent = 'Stamp Duty Value of Property (₹):';
+            } else if (assetType === 'movable') {
+                giftAmountLabel.textContent = 'Fair Market Value of Asset (₹):';
+            }
+        }
+
+        let selectedScenario = 'member-to-huf';
+
+        giftScenarioRadios.forEach(radio => {
+            if (radio.checked) {
+                selectedScenario = radio.value;
+            }
+        });
+
+        if (selectedScenario === 'member-to-huf') {
+            giftTaxableAmt.textContent = formatCurrency(0);
+            giftTaxRate.textContent = 'Exempt (0%)';
+            giftTaxRate.style.color = 'var(--color-success)';
+            
+            giftClubbingStatus.textContent = 'Yes, under Sec 64(2)';
+            giftClubbingStatus.style.color = '#f43f5e';
+            
+            if (assetType === 'cash') {
+                giftClauseDesc.innerHTML = `Gifts of cash received by an HUF from its <strong>members</strong> are completely tax-exempt under Section 56(2)(x). However, any income generated directly from these funds (e.g. FD interest) is <strong>clubbed with the gifting member's personal income</strong>.`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Reinvest the first-year interest in non-clubbing assets (like equity index mutual funds or PPF) to build tax-free wealth in the HUF.`;
+            } else if (assetType === 'immovable') {
+                giftClauseDesc.innerHTML = `Gifting immovable property (house, land) from a member to the HUF is tax-exempt at receipt. However, any <strong>rental income</strong> or future capital gains from this property will be <strong>clubbed with the gifting member's personal income</strong> (Section 27 deemed ownership).`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Instead of a direct gift, consider selling the property to the HUF using an interest-bearing loan from the member, keeping rental income in the HUF's slabs.`;
+            } else {
+                giftClauseDesc.innerHTML = `Gifting movable assets (shares, mutual funds, gold) by a member to the HUF is tax-free when received. However, subsequent dividends or capital gains upon sale of these assets are <strong>clubbed with the gifting member's income</strong>.`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> If the HUF sells the gifted shares/gold, the capital gains are clubbed. Reinvesting that gain into new assets keeps the subsequent second-degree income in the HUF.`;
+            }
+            
+        } else if (selectedScenario === 'nonmember-to-huf') {
+            const limit = 50000;
+            if (amount <= limit) {
+                giftTaxableAmt.textContent = formatCurrency(0);
+                giftTaxRate.textContent = 'Exempt (0%)';
+                giftTaxRate.style.color = 'var(--color-success)';
+                
+                giftClubbingStatus.textContent = 'No';
+                giftClubbingStatus.style.color = 'var(--color-success)';
+                
+                if (assetType === 'cash') {
+                    giftClauseDesc.innerHTML = `Cash gifts from non-members are completely tax-exempt under Section 56(2)(x) as long as the total value of all such gifts does not exceed <strong>₹50,000</strong> in a single financial year.`;
+                } else if (assetType === 'immovable') {
+                    giftClauseDesc.innerHTML = `Immovable property gifted by a non-member is tax-free if the total Stamp Duty Value is up to <strong>₹50,000</strong>.`;
+                } else {
+                    giftClauseDesc.innerHTML = `Movable assets (shares, mutual funds, gold) gifted by a non-member are tax-free if the total Fair Market Value (FMV) is up to <strong>₹50,000</strong>.`;
+                }
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Ensure that aggregate annual gifts from friends, business clients, or non-members to the HUF remain strictly under ₹50,000 to keep it tax-free.`;
+            } else {
+                giftTaxableAmt.textContent = formatCurrency(amount);
+                giftTaxRate.textContent = 'Taxed at HUF Slabs';
+                giftTaxRate.style.color = '#f43f5e';
+                
+                giftClubbingStatus.textContent = 'No';
+                giftClubbingStatus.style.color = 'var(--color-success)';
+                
+                if (assetType === 'cash') {
+                    giftClauseDesc.innerHTML = `Since aggregate cash gifts from non-members exceed ₹50,000, the <strong>entire amount (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+                    giftStrategyTip.innerHTML = `⚠️ <strong>Warning:</strong> The entire amount is taxed, not just the excess. Consider structuring this as an interest-bearing loan instead of a gift.`;
+                } else if (assetType === 'immovable') {
+                    giftClauseDesc.innerHTML = `Since the stamp duty value exceeds ₹50,000, the <strong>entire Stamp Duty Value (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+                    giftStrategyTip.innerHTML = `⚠️ <strong>Warning:</strong> Gifting property from a non-member is highly tax-inefficient. Consider structuring this as a commercial sale to the HUF instead.`;
+                } else {
+                    giftClauseDesc.innerHTML = `Since the Fair Market Value (FMV) exceeds ₹50,000, the <strong>entire FMV (${formatCurrency(amount)})</strong> is taxable under HUF as "Income from Other Sources".`;
+                    giftStrategyTip.innerHTML = `⚠️ <strong>Warning:</strong> High value movable gifts from non-members are taxed in full. Consider a loan or a direct purchase by the HUF.`;
+                }
+            }
+            
+        } else if (selectedScenario === 'huf-to-member') {
+            giftTaxableAmt.textContent = formatCurrency(0);
+            giftTaxRate.textContent = 'Exempt (0%)';
+            giftTaxRate.style.color = 'var(--color-success)';
+            
+            giftClubbingStatus.textContent = 'No';
+            giftClubbingStatus.style.color = 'var(--color-success)';
+            
+            if (assetType === 'cash') {
+                giftClauseDesc.innerHTML = `Gifts of cash from the HUF to its own <strong>members</strong> are tax-exempt for the member under Section 56(2)(x) (HUF is treated as a relative). No clubbing applies.`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Use HUF funds to pay for members' education, medical treatments, or marriage expenses. These are fully exempt and legally clean.`;
+            } else if (assetType === 'immovable') {
+                giftClauseDesc.innerHTML = `Transferring immovable property (house, land) from the HUF to a member is tax-exempt. However, it requires a registered gift deed or partition deed to formalize the transfer and avoid deemed ownership issues.`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Transferring property to a member is best done during a total partition to ensure clean ownership.`;
+            } else {
+                giftClauseDesc.innerHTML = `Gifting movable assets (shares, gold) from the HUF to a member is tax-free for the recipient. No clubbing applies.`;
+                giftStrategyTip.innerHTML = `💡 <strong>Tax Planning Tip:</strong> Excellent for distributing wealth or gold to daughters for marriage or providing investment capital to children.`;
+            }
+        }
+    }
+
+    if (giftAmountInput && giftScenarioRadios.length > 0) {
+        giftAmountInput.addEventListener('input', updateGiftTaxCalculation);
+        if (giftAssetTypeSelect) {
+            giftAssetTypeSelect.addEventListener('change', updateGiftTaxCalculation);
+        }
+        giftScenarioRadios.forEach(radio => {
+            radio.addEventListener('change', updateGiftTaxCalculation);
+        });
+        updateGiftTaxCalculation(); // Initial calculation on page load
     }
 
     // ==========================================================================

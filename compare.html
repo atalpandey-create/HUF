@@ -36,6 +36,7 @@
                 <ul>
                     <li><a href="#welcome" class="nav-link active" id="link-welcome">Welcome</a></li>
                     <li><a href="#matrix" class="nav-link" id="link-matrix">Comparison Matrix</a></li>
+                    <li><a href="#gifts" class="nav-link" id="link-gifts">Gift Taxation & Slabs</a></li>
                     <li><a href="#scenarios" class="nav-link" id="link-scenarios">Income Scenarios</a></li>
                     <li><a href="#decision" class="nav-link" id="link-decision">Decision Guide</a></li>
                 </ul>
@@ -172,6 +173,140 @@
                 </div>
             </section>
 
+            <!-- GIFT TAXATION & MAX CLAUSES -->
+            <section id="gifts" class="report-section card-style">
+                <div class="section-badge">🎁 GIFT TAXATION & LEGAL CLAUSES</div>
+                <h2 class="section-title">HUF Gift Rules & Maximum Tax Benefits</h2>
+                <p class="section-desc">
+                    Gifting money or assets to an HUF is a common tax planning route, but it must be done within the boundaries of Section 56(2)(x) and Section 64(2). Compare the tax treatment for different scenarios below.
+                </p>
+
+                <!-- Interactive Gift Calculator Widget -->
+                <div class="interactive-calculator" style="margin-bottom: 40px; border: 1px solid rgba(180, 138, 62, 0.3); border-radius: var(--border-radius-md); padding: 30px;">
+                    <h3 style="font-size: 1.25rem; color: var(--color-primary); margin-bottom: 20px; text-align: center; font-family: var(--font-serif); border-bottom: none; padding-bottom: 0;">
+                        ⚡ Interactive HUF Gift Tax Calculator
+                    </h3>
+                    <div class="grid-2-col" style="align-items: stretch; gap: 30px;">
+                        <!-- Inputs -->
+                        <div style="background: #f8fafc; padding: 24px; border-radius: var(--border-radius-sm); border: var(--border-glass); display: flex; flex-direction: column; gap: 20px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="gift-asset-type" style="font-weight:600; font-size:0.9rem; margin-bottom: 8px; display: block; color: var(--color-primary);">Select Asset Type:</label>
+                                <select id="gift-asset-type" style="width: 100%; padding: 12px; border: 1px solid rgba(226, 232, 240, 1); border-radius: var(--border-radius-sm); font-size: 0.9rem; font-family: var(--font-sans); color: var(--color-text-main); background-color: #ffffff; cursor: pointer;">
+                                    <option value="cash" selected>💰 Cash / Funds / Bank Transfer</option>
+                                    <option value="immovable">🏠 Immovable Property (House, Plot, Land)</option>
+                                    <option value="movable">📈 Movable Property (Shares, Gold, Mutual Funds)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="gift-amount" id="gift-amount-label" style="font-weight:600; font-size:0.9rem; margin-bottom: 8px; display: block; color: var(--color-primary);">Gift Amount (₹):</label>
+                                <div class="input-wrapper" style="position: relative; display: flex; align-items: center;">
+                                    <span class="currency-prefix" style="position: absolute; left: 16px; font-weight: 600; color: var(--color-text-muted);">₹</span>
+                                    <input type="number" id="gift-amount" value="100000" min="0" step="5000" style="width: 100%; padding: 12px 12px 12px 36px; border: 1px solid rgba(226, 232, 240, 1); border-radius: var(--border-radius-sm); font-size: 1rem; font-family: var(--font-sans); color: var(--color-text-main); background-color: #ffffff;">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-weight:600; font-size:0.9rem; margin-bottom: 8px; display: block; color: var(--color-primary);">Select Gift Scenario:</label>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <label class="radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.88rem; line-height: 1.4; color: var(--color-text-main);">
+                                        <input type="radio" name="gift-scenario" value="member-to-huf" checked style="margin-top: 3px; cursor: pointer;">
+                                        <div>
+                                            <strong>Gifted by a Member to HUF</strong>
+                                            <span style="display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">From Karta, Coparcener, or Spouse to the HUF pool</span>
+                                        </div>
+                                    </label>
+                                    <label class="radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.88rem; line-height: 1.4; color: var(--color-text-main);">
+                                        <input type="radio" name="gift-scenario" value="nonmember-to-huf" style="margin-top: 3px; cursor: pointer;">
+                                        <div>
+                                            <strong>Gifted by a Non-Member to HUF</strong>
+                                            <span style="display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">From friends, third parties, or non-member relatives</span>
+                                        </div>
+                                    </label>
+                                    <label class="radio-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.88rem; line-height: 1.4; color: var(--color-text-main);">
+                                        <input type="radio" name="gift-scenario" value="huf-to-member" style="margin-top: 3px; cursor: pointer;">
+                                        <div>
+                                            <strong>Gifted by HUF to a Member</strong>
+                                            <span style="display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">HUF gifting funds/property to one of its members</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Outputs -->
+                        <div style="display: flex; flex-direction: column; justify-content: space-between; background: var(--color-accent-gold-light); border-radius: var(--border-radius-sm); padding: 24px; border: 1px solid rgba(180, 138, 62, 0.15);">
+                            <div>
+                                <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--color-accent-gold-dark); letter-spacing: 1.5px; margin-bottom: 15px; text-transform: uppercase;">TAXATION BREAKDOWN</h4>
+                                
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px dashed rgba(180, 138, 62, 0.2); padding-bottom: 8px;">
+                                    <span style="color: var(--color-text-muted);">Taxable Amount:</span>
+                                    <strong id="gift-taxable-amt" style="color: var(--color-text-main);">₹0</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px dashed rgba(180, 138, 62, 0.2); padding-bottom: 8px;">
+                                    <span style="color: var(--color-text-muted);">Tax Rate / Liability:</span>
+                                    <strong id="gift-tax-rate" style="color: var(--color-success);">Exempt (0%)</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px dashed rgba(180, 138, 62, 0.2); padding-bottom: 8px;">
+                                    <span style="color: var(--color-text-muted);">Future Income Clubbing:</span>
+                                    <strong id="gift-clubbing-status" style="color: #f43f5e;">Yes, under Sec 64(2)</strong>
+                                </div>
+                                <div id="gift-clause-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--color-text-main); margin-bottom: 0; padding-top: 4px;">
+                                    <!-- Dynamic text loaded by JS -->
+                                </div>
+                            </div>
+                            
+                            <div id="gift-strategy-tip" style="background: white; border-radius: 6px; padding: 12px; border-left: 4px solid var(--color-accent-gold-dark); font-size: 0.78rem; line-height: 1.4; color: var(--color-text-muted); margin-top: 15px; box-shadow: var(--shadow-soft);">
+                                <!-- Dynamic strategy tip loaded by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maximum Benefit & Planning Clauses Grid -->
+                <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-primary); margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-gold-light); padding-bottom: 8px;">
+                    📌 Key Maximum Benefit Clauses & Exemption Limits for HUF
+                </h3>
+                <div class="objectives-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 0; margin-bottom: 20px; gap: 24px;">
+                    <!-- Clause 1 -->
+                    <div class="obj-card">
+                        <span class="obj-num">₹4.05L</span>
+                        <h3>Max Slab-Difference Savings</h3>
+                        <p>Under the New Regime (FY 2026-27), splitting ₹24 Lakhs of family income from a 30% individual bracket to a new HUF utilizes the HUF's lower slabs, saving up to <strong>₹4,05,600</strong> (excl. surcharge) annually.</p>
+                    </div>
+                    <!-- Clause 2 -->
+                    <div class="obj-card">
+                        <span class="obj-num">Sec 64(2)</span>
+                        <h3>Clubbing & Reinvestment Route</h3>
+                        <p>While direct income from gifted assets from a member is clubbed with the member, <strong>income-on-income</strong> (subsequent gains from reinvesting the first-year income) is taxed in the hands of the HUF, not clubbed.</p>
+                    </div>
+                    <!-- Clause 3 -->
+                    <div class="obj-card">
+                        <span class="obj-num">Sec 54 / 54F</span>
+                        <h3>Capital Gains Exemption</h3>
+                        <p>An HUF has the same rights as an individual to claim 100% tax exemption on Long-Term Capital Gains (LTCG) from the sale of shares/property by buying a residential house.</p>
+                    </div>
+                    <!-- Clause 4 -->
+                    <div class="obj-card">
+                        <span class="obj-num">Sec 80D</span>
+                        <h3>Separate Medical Insurance Limits</h3>
+                        <p>If utilizing the Old Tax Regime, the HUF can claim a deduction of up to <strong>₹25,000</strong> (₹50,000 for senior citizens) for health insurance premium paid for its members, independent of individual limits.</p>
+                    </div>
+                    <!-- Clause 5 -->
+                    <div class="obj-card">
+                        <span class="obj-num">Sec 40A(2)</span>
+                        <h3>Salary Payments to Members</h3>
+                        <p>The HUF can pay reasonable salaries/remunerations to the Karta or coparceners for managing HUF assets/business, deducting it as a business expense while utilizing members' lower slabs.</p>
+                    </div>
+                    <!-- Clause 6 -->
+                    <div class="obj-card">
+                        <span class="obj-num">Sec 171</span>
+                        <h3>Complete vs. Partial Partition Rules</h3>
+                        <p>Only a <strong>complete partition</strong> (total split of all assets among all coparceners) is recognized for HUF tax assessments. Partial partitions are ignored by the tax department.</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- INCOME SCENARIOS -->
             <section id="scenarios" class="report-section card-style">
                 <div class="section-badge">REAL-WORLD TIER COMPARISON</div>
@@ -182,10 +317,12 @@
 
                 <!-- Interactive Scenario Buttons -->
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+                    <button class="btn btn-scenario" data-income="1200000" id="btn-scen-12" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹12 Lakhs Income</button>
                     <button class="btn btn-scenario active" data-income="1500000" id="btn-scen-15" style="width: auto; background-color: var(--color-primary); color: white;">₹15 Lakhs Income</button>
-                    <button class="btn btn-scenario" data-income="3000000" id="btn-scen-30" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹30 Lakhs Income</button>
+                    <button class="btn btn-scenario" data-income="2500000" id="btn-scen-25" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹25 Lakhs Income</button>
                     <button class="btn btn-scenario" data-income="5000000" id="btn-scen-50" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹50 Lakhs Income</button>
                     <button class="btn btn-scenario" data-income="10000000" id="btn-scen-100" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹1 Crore Income</button>
+                    <button class="btn btn-scenario" data-income="25000000" id="btn-scen-250" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">₹2.5 Crore Income</button>
                     <button class="btn btn-scenario" data-income="custom" id="btn-scen-custom" style="width: auto; background-color: white; border: 1px solid var(--color-primary); color: var(--color-primary);">Custom Income...</button>
                 </div>
 
