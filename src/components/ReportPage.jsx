@@ -74,7 +74,7 @@ export default function ReportPage({ onNavigateToSetup }) {
               If you are an individual earning a good income, your tax rate can easily jump to 30%+. However, under Indian tax laws, your family can create an HUF, which is treated as a <strong>completely separate person</strong> for tax purposes.
             </p>
             <p>
-              This means the HUF gets its own PAN card, its own bank account, and its own separate basic tax-free limits and tax slabs. By shifting family income—like rent, interest, dividends, or stock market profits—into the HUF, you can divide your total income, keep your tax brackets low, and save lakhs of rupees legally. 
+              This means the HUF gets its own PAN card, its own bank account, and its own separate basic tax-free limits and tax slabs. By shifting family income-like rent, interest, dividends, or stock market profits-into the HUF, you can divide your total income, keep your tax brackets low, and save lakhs of rupees legally. 
             </p>
             <p>
               It acts like a dedicated family piggy bank that grows tax-efficiently for the benefit of your children and future generations.

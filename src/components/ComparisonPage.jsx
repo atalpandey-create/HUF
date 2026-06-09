@@ -1496,7 +1496,7 @@ export default function ComparisonPage() {
               {incomeSalary > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid #f43f5e' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: '#f43f5e', marginBottom: '4px' }}>
-                    💼 Salary Income ({formatCurrency(incomeSalary)}) — Keep Individual
+                    💼 Salary Income ({formatCurrency(incomeSalary)}) - Keep Individual
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Salary can only be earned and taxed in your individual capacity. Section 64 (clubbing rules) strictly forbids shifting salary to an HUF. Your salary is correctly retained under your Individual tax profile.
@@ -1508,7 +1508,7 @@ export default function ComparisonPage() {
               {incomeRent > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    🏠 House Rental Income ({formatCurrency(incomeRent)}) — Structure Strategically
+                    🏠 House Rental Income ({formatCurrency(incomeRent)}) - Structure Strategically
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Gifting house property directly to your HUF triggers <strong>Section 27 (Deemed Ownership)</strong>, meaning the rental income will still be clubbed with your individual income. <strong style={{ color: 'var(--color-text-main)' }}>Strategy:</strong> Consider leasing/sub-leasing the property to the HUF at a commercial rate, transferring the property via an interest-bearing loan to the HUF, or routing ancestral property rentals directly to the HUF bank account.
@@ -1526,7 +1526,7 @@ export default function ComparisonPage() {
               {incomeInterest > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    🏦 FD & Savings Interest ({formatCurrency(incomeInterest)}) — Reinvest Interest
+                    🏦 FD & Savings Interest ({formatCurrency(incomeInterest)}) - Reinvest Interest
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Cash gifted to an HUF by members is tax-free on receipt u/s 56(2)(x), but interest earned on it is clubbed with the gifting member u/s 64(2). <strong style={{ color: 'var(--color-text-main)' }}>Strategy:</strong> Reinvest the first-year interest within the HUF. Subsequent "income-on-income" is taxed strictly in the HUF's hands (non-clubbed). Alternatively, fund the HUF via interest-bearing loans or utilize gifts from non-members (tax-free up to ₹50,000/year).
@@ -1544,7 +1544,7 @@ export default function ComparisonPage() {
               {incomeCapitalGains > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    📈 Capital Gains ({formatCurrency(incomeCapitalGains)}) — Double Section 112A Limits
+                    📈 Capital Gains ({formatCurrency(incomeCapitalGains)}) - Double Section 112A Limits
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     One of the most powerful strategies is opening a separate HUF Demat & Trading account. By shifting a portion of your investment portfolio to the HUF, you get a completely separate <strong>₹1.25 Lakhs tax-free Long-Term Capital Gains (LTCG) limit under Section 112A</strong> every year, doubling your family's annual stock tax-savings.
@@ -1562,7 +1562,7 @@ export default function ComparisonPage() {
               {incomeBusiness > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    ⚙️ Business & Professional ({formatCurrency(incomeBusiness)}) — Direct HUF Operations
+                    ⚙️ Business & Professional ({formatCurrency(incomeBusiness)}) - Direct HUF Operations
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Operating a business or professional consultancy in the name of the HUF (as Karta representing the family) is 100% clean and avoids all clubbing rules. <strong style={{ color: 'var(--color-text-main)' }}>Strategy:</strong> Route business billings to the HUF PAN. You can also pay reasonable salaries/remunerations to coparceners/members for managing the business. This is fully deductible under <strong>Section 40A(2)</strong> as a business expense while utilizing members' lower individual tax slabs.
@@ -1580,7 +1580,7 @@ export default function ComparisonPage() {
               {incomeDividend > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    📊 Dividend Income ({formatCurrency(incomeDividend)}) — Route via HUF
+                    📊 Dividend Income ({formatCurrency(incomeDividend)}) - Route via HUF
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Dividend income is taxed at normal progressive slabs. If your individual tax bracket is high, routing dividend-paying shares to the HUF lets you pay tax at the HUF's lower slabs, saving significant taxes.
@@ -1598,7 +1598,7 @@ export default function ComparisonPage() {
               {incomeGift > 0 ? (
                 <div style={{ background: '#ffffff', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderLeft: '4px solid var(--color-accent-gold-dark)' }}>
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-accent-gold-dark)', marginBottom: '4px' }}>
-                    🎁 Gift from Non-Member ({formatCurrency(incomeGift)}) — Section 56(2)(x) Tax Planning
+                    🎁 Gift from Non-Member ({formatCurrency(incomeGift)}) - Section 56(2)(x) Tax Planning
                   </strong>
                   <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.4 }}>
                     Gifts received from non-members exceeding ₹50,000 are fully taxable under Section 56(2)(x). <strong style={{ color: 'var(--color-text-main)' }}>Strategy:</strong> Splitting the gift or routing it to the HUF (which enjoys its own separate basic exemption limit of ₹4 Lakhs) helps minimize the tax bracket. Also, note that gifts received by HUF from non-members are completely free of clubbing rules (Section 64 does not apply to non-member transfers), allowing you to reinvest the proceeds and grow the wealth entirely within the HUF tax-free.
